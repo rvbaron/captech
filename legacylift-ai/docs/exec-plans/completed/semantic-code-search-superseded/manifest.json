@@ -1,0 +1,223 @@
+{
+  "_superseded": "Historical spec from branch feature/hybrid-code-search (2026-03-23). Superseded by the shipped tools/legacylift_search/ (see semantic-search.manifest.json) and docs/exec-plans/active/semantic-code-search-graph-index.md. Do not implement from this file. See docs/exec-plans/completed/semantic-code-search-superseded/README.md.",
+  "scs_version": "0.1.0",
+  "schema_version": 1,
+
+  "repo": {
+    "root": ".",
+    "repo_root_id": "AUTO",
+    "monorepo_mode": true,
+    "git": {
+      "enabled": true,
+      "use_git_diff_for_incremental": true,
+      "baseline_ref": "HEAD"
+    }
+  },
+
+  "index": {
+    "output_dir": ".legacylift/scs",
+    "sqlite_path": ".legacylift/scs/scs.sqlite",
+    "chroma_dir": ".legacylift/scs/chroma",
+    "rebuild_on_schema_change": true,
+
+    "include_globs": [
+      "**/*"
+    ],
+    "exclude_globs": [
+      "**/.git/**",
+      "**/.legacylift/**",
+
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/out/**",
+      "**/target/**",
+      "**/.next/**",
+      "**/.nuxt/**",
+
+      "**/bin/**",
+      "**/obj/**",
+      "**/.vs/**",
+
+      "**/.venv/**",
+      "**/venv/**",
+      "**/__pycache__/**",
+
+      "**/*.min.js",
+      "**/*.map",
+      "**/*.lock",
+      "**/*.tmp",
+      "**/*.log"
+    ],
+
+    "language_overrides": {
+      "**/*.cls": "apex",
+      "**/*.trigger": "apex",
+      "**/*.cpy": "cobol",
+      "**/*.cbl": "cobol",
+      "**/*.jcl": "jcl",
+      "**/*.sql": "sql"
+    }
+  },
+
+  "chunking": {
+    "engine": "chonkie.code_chunker",
+    "chunk_types_enabled": ["SymbolBody", "Signature", "FileSummary"],
+
+    "limits": {
+      "max_lines_per_symbol_body": 600,
+      "max_chars_per_chunk": 24000,
+      "min_chars_per_chunk": 200,
+      "split_oversize_symbols": true,
+      "prefer_ast_boundaries": true,
+      "include_leading_doc_comments": true,
+      "max_doc_comment_lines": 40
+    },
+
+    "file_summary": {
+      "enabled": true,
+      "include_imports": true,
+      "include_exports": true,
+      "include_top_level_symbols": true,
+      "max_lines": 200
+    }
+  },
+
+  "embeddings": {
+    "provider": "local",
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+
+    "device_preference": ["cuda", "mps", "cpu"],
+
+    "dimensions": {
+      "enabled": true,
+      "output_dim": 1024
+    },
+
+    "batching": {
+      "batch_size": 16,
+      "max_concurrent_batches": 1
+    },
+
+    "text_format": {
+      "doc_prefix": "doc:",
+      "query_prefix": "query:",
+      "include_path_header": true,
+      "include_symbol_header": true,
+      "header_template": "path={path}\nlang={language}\nchunk_type={chunk_type}\nsymbol={qualified_name}\n---\n"
+    }
+  },
+
+  "lexical_search": {
+    "primary": "sqlite_fts5",
+    "fallback": "ripgrep",
+    "fts_fields": ["text", "path", "symbol_name", "qualified_name"],
+    "fts_tokenizer": "unicode61",
+    "ripgrep": {
+      "binary": "rg",
+      "args": ["--no-heading", "--line-number", "--hidden", "--smart-case"]
+    }
+  },
+
+  "vector_store": {
+    "type": "chroma",
+    "collection": "code_chunks_v1",
+    "distance": "cosine",
+    "k_default": 40,
+
+    "metadata_indexing": {
+      "enabled": true,
+      "fields": [
+        "path",
+        "language",
+        "chunk_type",
+        "symbol_name",
+        "qualified_name",
+        "start_line",
+        "end_line",
+        "is_test",
+        "is_generated"
+      ]
+    }
+  },
+
+  "hybrid_ranking": {
+    "algorithm": "rrf",
+    "rrf_k": 60,
+    "weights": {
+      "lexical": 1.0,
+      "vector": 1.0
+    },
+    "top_k": 20,
+    "candidates": {
+      "lexical_k": 40,
+      "vector_k": 40
+    }
+  },
+
+  "graph": {
+    "storage": "sqlite",
+    "analysis": "networkx",
+    "edges": {
+      "extract_calls": true,
+      "extract_references": true,
+      "extract_imports": true
+    },
+    "resolution": {
+      "enabled": true,
+      "strategy_order": [
+        "same_file_exact",
+        "same_dir_exact",
+        "repo_unique",
+        "repo_best_effort"
+      ],
+      "min_confidence_to_link": 0.65
+    },
+    "trace": {
+      "default_depth": 3,
+      "max_depth": 8,
+      "max_nodes": 500
+    }
+  },
+
+  "dead_code": {
+    "mode": "unreferenced_candidate",
+    "exclude_if": {
+      "is_exported": true,
+      "is_entrypoint": true
+    },
+    "ignore_paths_globs": [
+      "**/*Tests*/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**"
+    ],
+    "confidence_threshold": 0.5
+  },
+
+  "entrypoints": {
+    "enabled": true,
+
+    "explicit": [
+      { "path": "src/Program.cs", "symbol": "Program.Main" },
+      { "path": "src/app.py", "symbol": "main" }
+    ],
+
+    "heuristics": {
+      "dotnet": ["Program.Main", "Startup.Configure", "Startup.ConfigureServices"],
+      "java": ["public static void main"],
+      "python": ["if __name__ == \"__main__\""],
+      "node": ["require.main === module", "process.argv"],
+      "web": ["Controller", "Route", "Router", "Flask", "FastAPI", "Express"]
+    }
+  },
+
+  "runtime": {
+    "max_index_seconds": 0,
+    "log_level": "INFO",
+    "telemetry": {
+      "enabled": false
+    }
+  }
+}

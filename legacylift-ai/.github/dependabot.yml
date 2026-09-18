@@ -1,0 +1,23 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directories: # Python package manifests (pyproject.toml / requirements.txt), excluding sample repos
+      - "/**"
+      - "!/repos/**"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 3
+  - package-ecosystem: "npm"
+    directories: # Node.js package manifests (package.json), excluding sample repos
+      - "/**"
+      - "!/repos/**"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 3

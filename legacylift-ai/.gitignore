@@ -1,0 +1,133 @@
+.env
+.venv
+__pycache__
+venv/
+*.pyc
+*.egg-info/
+**/node_modules
+notes/
+settings.local.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+/localdocs
+
+# Google API Json file
+google-api.json
+
+# .NET specific
+**/bin/
+**/obj/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+.vs/
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+
+# Generated code graphs (persisted in analyzed repositories)
+CODE-GRAPH.json
+**/CODE-GRAPH.json
+
+*.cache
+
+# DockerCompose secrets
+*secrets/
+
+.pytest_cache/
+.benchmarks
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# legacylift-search index artifacts (SQLite + Chroma) — derived, churn on every reindex
+repos/*/legacylift-docs/index/
+repos/*/*/legacylift-docs/index/
+
+# legacylift-search durable knowledge store (SQLite) — outside the index/
+# path above, so it needs its own rule; the knowledge/ directory itself is
+# not tracked (it is recreated at runtime by KnowledgeStore.__init__)
+repos/*/legacylift-docs/knowledge/knowledge.sqlite*
+repos/*/*/legacylift-docs/knowledge/knowledge.sqlite*
+
+# legacylift-search artifacts under the analysis/ layout (Milestone 0 of
+# reqs-to-data-store): <app>/legacy/<system>/ is the pulled code and is never
+# written to; <app>/analysis/<system>/ holds everything generated. Ignore the
+# derived index wholesale, and the knowledge store BY NAME -- never the
+# knowledge/ directory itself, because analysis/<system>/knowledge/requirements.jsonl
+# is a tracked, diffable export.
+# Written at two depths, matching the legacylift-docs rules above, because an
+# analysis tree can sit either directly under repos/ (the plugin convention)
+# or one level deeper, as repos/ctcm/ctcm-api already does for the fallback.
+repos/*/analysis/*/index/
+repos/*/analysis/*/knowledge/knowledge.sqlite*
+repos/*/analysis/*/knowledge/chroma/
+repos/*/*/analysis/*/index/
+repos/*/*/analysis/*/knowledge/knowledge.sqlite*
+repos/*/*/analysis/*/knowledge/chroma/
+
+# NNG comparison repo (client code + original code-mod outputs) — kept local, never committed
+repos/nng-app-legacylift-analysis/
+
+# Research primary sources for the reqs-to-data-store design interview — kept local,
+# never committed. Contains a licensed standard (ISO/IEC/IEEE 29148:2018) and an
+# excerpt from a copyrighted book; redistribution is not permitted. The draft that
+# cites them IS tracked.
+docs/exec-plans/pending/reqs-to-data-store-sources/
+
+# platform-ui (review UI). The demo dataset is derived from client codebases —
+# copied knowledge stores, assessment prose and cited source slices — and must
+# never reach the remote. Rebuild it with platform-ui/tools/prepare_data.py.
+platform-ui/data/
+platform-ui/api/bin/
+platform-ui/api/obj/
+platform-ui/web/node_modules/
+platform-ui/web/dist/
+platform-ui/web/.angular/
+
+# Credential quarantine written by /modernize-assess and /modernize-harden.
+# Both commands verify with `git check-ignore` before writing and relocate to
+# ~/.modernize/<system>/ if the check fails, so these rules are what keeps the
+# inventory in the project tree. Matched at any depth: the analysis tree can sit
+# at the workspace root, under repos/, or one level deeper.
+SECRETS.local.md
+*.local.patch

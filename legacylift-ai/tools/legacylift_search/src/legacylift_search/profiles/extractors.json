@@ -1,0 +1,409 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "csharp": {
+      "definition_node_kinds": {
+        "class_declaration": "type",
+        "interface_declaration": "type",
+        "struct_declaration": "type",
+        "record_declaration": "type",
+        "enum_declaration": "type",
+        "method_declaration": "function",
+        "constructor_declaration": "function",
+        "property_declaration": "field",
+        "field_declaration": "field"
+      },
+      "call_node_kinds": [
+        "invocation_expression",
+        "object_creation_expression",
+        "member_access_expression",
+        "conditional_access_expression"
+      ],
+      "import_node_kinds": [
+        "using_directive"
+      ],
+      "name_node_kinds": [
+        "identifier",
+        "qualified_name",
+        "generic_name"
+      ],
+      "container_node_kinds": [
+        "namespace_declaration",
+        "file_scoped_namespace_declaration",
+        "class_declaration",
+        "interface_declaration",
+        "struct_declaration",
+        "record_declaration"
+      ],
+      "inheritance_node_kinds": [
+        "base_list"
+      ],
+      "annotation_semantics": {
+        "HttpGet": "route_get",
+        "HttpPost": "route_post",
+        "HttpPut": "route_put",
+        "HttpDelete": "route_delete",
+        "HttpPatch": "route_patch",
+        "Route": "route_any",
+        "Authorize": "authz",
+        "Required": "required",
+        "MaxLength": "max_length",
+        "StringLength": "max_length",
+        "Table": "table",
+        "Column": "column",
+        "Key": "id",
+        "ForeignKey": "foreign_key"
+      },
+      "fallback_patterns": {
+        "definitions": [
+          "\\b(class|interface|struct|record|enum)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "\\b(public|private|protected|internal|static|virtual|override|async|sealed|partial|new|extern|unsafe|readonly|abstract|\\s)+\\s*[A-Za-z_][A-Za-z0-9_<>,?\\[\\]\\s]*\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\("
+        ],
+        "calls": [
+          "([A-Za-z_][A-Za-z0-9_\\.<>]*)\\s*\\("
+        ],
+        "inheritance": [
+          "\\bclass\\s+\\w+\\s*:\\s*([\\w\\.,<>\\s]+?)(?:\\bwhere\\b|\\{|$)"
+        ]
+      }
+    },
+    "java": {
+      "definition_node_kinds": {
+        "class_declaration": "type",
+        "interface_declaration": "type",
+        "enum_declaration": "type",
+        "record_declaration": "type",
+        "method_declaration": "function",
+        "constructor_declaration": "function",
+        "field_declaration": "field"
+      },
+      "call_node_kinds": [
+        "method_invocation",
+        "object_creation_expression",
+        "field_access",
+        "method_reference"
+      ],
+      "import_node_kinds": [
+        "import_declaration",
+        "package_declaration"
+      ],
+      "name_node_kinds": [
+        "identifier",
+        "scoped_identifier",
+        "type_identifier"
+      ],
+      "container_node_kinds": [
+        "package_declaration",
+        "class_declaration",
+        "interface_declaration",
+        "enum_declaration",
+        "record_declaration"
+      ],
+      "inheritance_node_kinds": [
+        "superclass",
+        "super_interfaces",
+        "extends_interfaces"
+      ],
+      "annotation_semantics": {
+        "GetMapping": "route_get",
+        "PostMapping": "route_post",
+        "PutMapping": "route_put",
+        "DeleteMapping": "route_delete",
+        "PatchMapping": "route_patch",
+        "RequestMapping": "route_any",
+        "PreAuthorize": "authz",
+        "Secured": "authz",
+        "RolesAllowed": "authz",
+        "NotNull": "required",
+        "NotEmpty": "required",
+        "NotBlank": "required",
+        "Size": "max_length",
+        "Length": "max_length",
+        "Entity": "table",
+        "Table": "table",
+        "Column": "column",
+        "Id": "id",
+        "JoinColumn": "foreign_key",
+        "ManyToOne": "associates",
+        "OneToMany": "associates",
+        "ManyToMany": "associates",
+        "OneToOne": "associates"
+      },
+      "fallback_patterns": {
+        "definitions": [
+          "\\b(class|interface|enum|record)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "\\b(public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)+\\s*[A-Za-z_][A-Za-z0-9_<>,?\\[\\]\\s]*\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\("
+        ],
+        "calls": [
+          "([A-Za-z_][A-Za-z0-9_\\.]*)\\s*\\("
+        ],
+        "inheritance": [
+          "\\b(extends|implements)\\s+([\\w\\.,<>\\s]+?)\\s*(?=\\bextends\\b|\\bimplements\\b|[{;]|$)"
+        ]
+      }
+    },
+    "python": {
+      "definition_node_kinds": {
+        "class_definition": "type",
+        "function_definition": "function",
+        "decorated_definition": "other"
+      },
+      "call_node_kinds": [
+        "call",
+        "attribute"
+      ],
+      "import_node_kinds": [
+        "import_statement",
+        "import_from_statement"
+      ],
+      "name_node_kinds": [
+        "identifier"
+      ],
+      "container_node_kinds": [
+        "class_definition",
+        "function_definition"
+      ],
+      "inheritance_node_kinds": [
+        "argument_list"
+      ],
+      "annotation_semantics": {
+        "get": "route_get",
+        "post": "route_post",
+        "put": "route_put",
+        "delete": "route_delete",
+        "patch": "route_patch",
+        "route": "route_any",
+        "requires_auth": "authz",
+        "login_required": "authz"
+      },
+      "fallback_patterns": {
+        "definitions": [
+          "^\\s*class\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "^\\s*def\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\("
+        ],
+        "calls": [
+          "([A-Za-z_][A-Za-z0-9_\\.]*?)\\s*\\("
+        ],
+        "inheritance": [
+          "\\bclass\\s+\\w+\\s*\\(([\\w\\.,\\s]+)\\)"
+        ]
+      }
+    },
+    "javascript": {
+      "definition_node_kinds": {
+        "class_declaration": "type",
+        "function_declaration": "function",
+        "method_definition": "function",
+        "generator_function_declaration": "function",
+        "lexical_declaration": "field",
+        "variable_declaration": "field",
+        "variable_declarator": "field"
+      },
+      "call_node_kinds": [
+        "call_expression",
+        "new_expression",
+        "member_expression",
+        "await_expression"
+      ],
+      "import_node_kinds": [
+        "import_statement",
+        "export_statement"
+      ],
+      "name_node_kinds": [
+        "identifier",
+        "property_identifier"
+      ],
+      "container_node_kinds": [
+        "class_declaration",
+        "function_declaration",
+        "method_definition"
+      ],
+      "inheritance_node_kinds": [
+        "class_heritage"
+      ],
+      "fallback_patterns": {
+        "definitions": [
+          "\\bclass\\s+([A-Za-z_$][A-Za-z0-9_$]*)",
+          "\\bfunction\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*\\(",
+          "\\b(const|let|var)\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*=\\s*(async\\s*)?(\\([^)]*\\)|[A-Za-z_$][A-Za-z0-9_$]*)\\s*=>"
+        ],
+        "calls": [
+          "([A-Za-z_$][A-Za-z0-9_$\\.]*)\\s*\\("
+        ],
+        "inheritance": [
+          "\\b(?:extends|implements)\\s+([\\w\\.,<>\\s]+?)\\s*(?=\\bextends\\b|\\bimplements\\b|[{;]|$)"
+        ]
+      }
+    },
+    "typescript": {
+      "definition_node_kinds": {
+        "class_declaration": "type",
+        "interface_declaration": "type",
+        "type_alias_declaration": "type",
+        "function_declaration": "function",
+        "method_definition": "function",
+        "abstract_method_signature": "function",
+        "lexical_declaration": "field",
+        "variable_declaration": "field",
+        "variable_declarator": "field",
+        "enum_declaration": "type"
+      },
+      "call_node_kinds": [
+        "call_expression",
+        "new_expression",
+        "member_expression",
+        "await_expression"
+      ],
+      "import_node_kinds": [
+        "import_statement",
+        "export_statement",
+        "internal_module"
+      ],
+      "name_node_kinds": [
+        "identifier",
+        "property_identifier",
+        "type_identifier"
+      ],
+      "container_node_kinds": [
+        "class_declaration",
+        "interface_declaration",
+        "function_declaration",
+        "method_definition",
+        "module"
+      ],
+      "inheritance_node_kinds": [
+        "class_heritage",
+        "extends_type_clause"
+      ],
+      "annotation_semantics": {
+        "Get": "route_get",
+        "Post": "route_post",
+        "Put": "route_put",
+        "Delete": "route_delete",
+        "Patch": "route_patch",
+        "UseGuards": "authz",
+        "IsNotEmpty": "required",
+        "MaxLength": "max_length",
+        "Entity": "table",
+        "Column": "column",
+        "PrimaryColumn": "id",
+        "PrimaryGeneratedColumn": "id",
+        "ManyToOne": "associates",
+        "OneToMany": "associates",
+        "JoinColumn": "foreign_key"
+      },
+      "fallback_patterns": {
+        "definitions": [
+          "\\bclass\\s+([A-Za-z_$][A-Za-z0-9_$]*)",
+          "\\binterface\\s+([A-Za-z_$][A-Za-z0-9_$]*)",
+          "\\btype\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*=",
+          "\\bfunction\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*\\(",
+          "\\b(const|let|var)\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*=\\s*(async\\s*)?(\\([^)]*\\)|[A-Za-z_$][A-Za-z0-9_$]*)\\s*=>"
+        ],
+        "calls": [
+          "([A-Za-z_$][A-Za-z0-9_$\\.]*)\\s*\\("
+        ],
+        "inheritance": [
+          "\\b(?:extends|implements)\\s+([\\w\\.,<>\\s]+?)\\s*(?=\\bextends\\b|\\bimplements\\b|[{;]|$)"
+        ]
+      }
+    },
+    "cobol": {
+      "definition_node_kinds": {
+        "program_id_paragraph": "other",
+        "section_header": "function",
+        "paragraph": "function",
+        "data_description_entry": "field",
+        "file_description_entry": "other",
+        "working_storage_section": "other",
+        "linkage_section": "other",
+        "procedure_division": "function"
+      },
+      "call_node_kinds": [
+        "perform_statement",
+        "call_statement",
+        "go_to_statement",
+        "exec_sql_statement",
+        "exec_cics_statement"
+      ],
+      "import_node_kinds": [
+        "copy_statement"
+      ],
+      "name_node_kinds": [
+        "program_name",
+        "identifier",
+        "word"
+      ],
+      "container_node_kinds": [
+        "program_definition",
+        "procedure_division",
+        "section_header",
+        "paragraph"
+      ],
+      "inheritance_node_kinds": [],
+      "fallback_patterns": {
+        "definitions": [
+          "^\\s*PROGRAM-ID\\.\\s+([A-Za-z0-9_-]+)",
+          "^\\s*([A-Za-z0-9_-]+)\\s+SECTION\\.",
+          "^\\s*([A-Za-z0-9_-]+)\\."
+        ],
+        "calls": [
+          "\\bPERFORM\\s+([A-Za-z0-9_-]+)",
+          "\\bCALL\\s+['\\\"]?([A-Za-z0-9_-]+)['\\\"]?",
+          "\\bGO\\s+TO\\s+([A-Za-z0-9_-]+)",
+          "\\bEXEC\\s+SQL\\b",
+          "\\bEXEC\\s+CICS\\b"
+        ]
+      }
+    },
+    "sql": {
+      "definition_node_kinds": {
+        "create_table": "table",
+        "create_view": "table",
+        "create_function": "function",
+        "create_procedure": "function",
+        "create_trigger_statement": "function",
+        "create_index_statement": "other",
+        "table_definition": "table",
+        "view_definition": "table"
+      },
+      "call_node_kinds": [
+        "call_statement",
+        "execute_statement",
+        "select_statement",
+        "insert_statement",
+        "update_statement",
+        "delete_statement",
+        "table_reference",
+        "object_reference"
+      ],
+      "import_node_kinds": [],
+      "name_node_kinds": [
+        "identifier",
+        "object_reference",
+        "qualified_name",
+        "bare_identifier"
+      ],
+      "container_node_kinds": [
+        "create_table",
+        "create_view",
+        "create_function",
+        "create_procedure"
+      ],
+      "inheritance_node_kinds": [],
+      "fallback_patterns": {
+        "definitions": [
+          "(?i)\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:(?:GLOBAL|LOCAL)\\s+)?(?:TEMP(?:ORARY)?\\s+)?(?:TABLE|VIEW|PROCEDURE|PROC|FUNCTION|TRIGGER|INDEX)\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)"
+        ],
+        "calls": [
+          "\\bEXEC(?:UTE)?\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)",
+          "\\bCALL\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)",
+          "\\bFROM\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)",
+          "\\bJOIN\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)",
+          "\\bUPDATE\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)",
+          "\\bINTO\\s+([#@]{0,2}[A-Za-z_\\[\"`][A-Za-z0-9_\\.\\[\\]\"`#@$]*)"
+        ]
+      }
+    }
+  }
+}

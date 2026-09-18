@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "assess_run_id": "2026-07-20T00:00:00Z-polyglot",
+  "domains": [
+    {
+      "domain_id": "core-services",
+      "name": "Core Services",
+      "description": "Eligibility, enrollment, and reclaim business logic.",
+      "path_globs": ["src/**"]
+    },
+    {
+      "domain_id": "data-layer",
+      "name": "Data Layer",
+      "description": "Relational schema and data-access definitions.",
+      "path_globs": ["database/**"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "core-services",
+      "to": "data-layer",
+      "kind": "reads",
+      "evidence": "Core services query the relational schema."
+    }
+  ]
+}

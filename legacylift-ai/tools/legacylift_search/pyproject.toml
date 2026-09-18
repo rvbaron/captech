@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=81,<83", "wheel==0.47.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "legacylift-code-search"
+version = "4.0.0"
+description = "Local semantic, lexical, and graph code search indexer for LegacyLift."
+# 3.12 exactly. tree-sitter 0.25.2 and tree-sitter-language-pack 1.8.1 are
+# what pin it, .python-version records 3.12.9, and CI runs 3.12 and nothing
+# else -- so ">=3.11" advertised two environments the project does not test
+# and one (3.14) that is known not to work.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "typer==0.26.4",
+  "rich==15.0.0",
+  "pydantic==2.13.4",
+  "pathspec==1.1.1",
+  "chonkie==1.6.7",
+  # chromadb 1.5.9 carries four open advisories with NO patched version --
+  # 1.5.9 is the latest release on PyPI and every vulnerable range reads
+  # "<= 1.5.9", so there is nothing to upgrade to (checked 2026-09-15):
+  # GHSA-36p7-vc44-83pf and GHSA-f4j7-r4q5-qw2c (critical, code injection via
+  # a malicious model repository with trust_remote_code on the /api/v2/...
+  # collection endpoints) and GHSA-2wm9-hf6c-p5cr / GHSA-xph7-9rjv-w5fr (high,
+  # cross-tenant access and an RBAC provider that ignores which tenant a
+  # permission is for). All four require the Chroma HTTP **server**; this
+  # project only ever constructs `chromadb.PersistentClient`
+  # (vector_store.py) -- embedded, on-disk, no listener, no auth provider, no
+  # tenants -- so no vulnerable path is reachable and the four alerts are
+  # dismissed as not_used. REVISIT if the vector store ever moves to a hosted
+  # Chroma server, which docs/exec-plans/pending/hosted-data-store.md
+  # contemplates: that change makes all four live and is a security decision,
+  # not a deployment detail.
+  "chromadb==1.5.9",
+  "sentence-transformers==5.5.1",
+  "numpy==2.4.6",
+  "networkx==3.6.1",
+  "tree-sitter==0.25.2",
+  "tree-sitter-language-pack==1.8.1"
+]
+
+[project.optional-dependencies]
+# The test framework is a dev extra, not a runtime dependency: an indexer
+# installed on a client machine has no reason to ship pytest. CI and the
+# README both install `.[dev]`.
+dev = [
+  "pytest==9.0.3",
+]
+# GPU embedding acceleration. NOTE: the CUDA build of torch is NOT installed
+# by this extra — pip extras cannot pin an --index-url, and the default torch
+# wheel on PyPI is CPU-only. Install the CUDA wheel separately first (see the
+# "Running on GPU" section in README.md), then `pip install -e .[gpu]` adds
+# the HF acceleration helpers that benefit large embedding batches.
+gpu = [
+  "accelerate>=0.30",
+]
+# Hosted Amazon Bedrock embedding provider (provider="api"). boto3 reads the
+# AWS_BEARER_TOKEN_BEDROCK env var automatically for bedrock-runtime calls.
+aws = [
+  "boto3>=1.40",
+]
+
+[project.scripts]
+legacylift-search = "legacylift_search.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+legacylift_search = ["profiles/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

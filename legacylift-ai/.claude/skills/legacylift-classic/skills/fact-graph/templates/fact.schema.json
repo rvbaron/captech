@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://legacylift.ai/schemas/fact.json",
+  "title": "Fact",
+  "description": "Represents a verifiable fact about an entity in the codebase, grounded in evidence",
+  "type": "object",
+  "required": ["id", "subject_id", "predicate", "object", "evidence"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique, deterministic identifier for the fact (content-based hash)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "subject_id": {
+      "type": "string",
+      "description": "Entity ID of the subject with domain prefix (e.g., cs:orders-orderservice-abc123)",
+      "pattern": "^(cs|db|ep|auth|svc|dto|proc|view|trig|ent):[a-z0-9-]+$"
+    },
+    "predicate": {
+      "type": "string",
+      "description": "The relationship or property being asserted",
+      "enum": [
+        "has_property",
+        "has_attribute",
+        "has_method",
+        "has_field",
+        "has_column",
+        "validates",
+        "requires",
+        "ensures",
+        "throws",
+        "returns",
+        "accepts",
+        "integrates_with",
+        "authenticates_via",
+        "authorizes_via",
+        "stores_in",
+        "reads_from",
+        "writes_to",
+        "caches_in",
+        "logs_to",
+        "publishes_to",
+        "subscribes_to",
+        "triggers_on",
+        "schedules_at",
+        "retries_on",
+        "timeout_after",
+        "max_length",
+        "min_value",
+        "max_value",
+        "pattern_matches",
+        "default_value",
+        "is_required",
+        "is_nullable",
+        "is_unique",
+        "is_indexed",
+        "state_transition",
+        "process_step",
+        "http_method",
+        "accepts_param",
+        "returns_response",
+        "requires_auth",
+        "has_cardinality",
+        "business_rule"
+      ]
+    },
+    "object": {
+      "description": "The value or entity that completes the fact (string value or entity ID)",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Evidence supporting this fact (must have at least one piece of evidence)",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["file", "line_range"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Relative path from repository root where the fact is grounded",
+            "minLength": 1
+          },
+          "line_range": {
+            "type": "array",
+            "description": "Line range [start, end] where fact is expressed (1-indexed, inclusive)",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Relevant code excerpt (optional, for human readability)"
+          },
+          "snippet_hash": {
+            "type": "string",
+            "description": "SHA-256 hash (first 12 chars) of code snippet for drift detection",
+            "pattern": "^[a-f0-9]{12}$"
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "description": "Confidence assessment of the fact extraction",
+      "required": ["score"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "description": "Confidence score (0.0 = no confidence, 1.0 = absolute certainty)",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Human-readable explanation of how confidence was determined",
+          "minLength": 10
+        }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Additional fact-specific metadata",
+      "properties": {
+        "data_type": {
+          "type": "string",
+          "description": "Data type (for properties, parameters, columns)"
+        },
+        "constraint_type": {
+          "type": "string",
+          "description": "Type of constraint (for validation facts)"
+        },
+        "provider": {
+          "type": "string",
+          "description": "External service or provider name (for integration facts)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "legacylift-classic",
+  "version": "3.7.0",
+  "description": "LegacyLift v3.7 documentation suite - 18 Claude Code skills that analyze legacy codebases and generate enterprise-grade markdown documentation with inline source citations. A fact-graph skill builds a structured JSON knowledge base (entities, relations, facts) that the generator, validator, enhancer, and exporter skills consume, following a generate -> validate -> polish -> export pipeline.",
+  "author": {
+    "name": "CapTech Consulting"
+  }
+}

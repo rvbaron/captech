@@ -1,0 +1,442 @@
+{
+  "_superseded": "Historical spec from branch feature/hybrid-code-search (2026-03-23). Superseded by the shipped tools/legacylift_search/src/legacylift_search/profiles/extractors.json. Do not implement from this file. See docs/exec-plans/completed/semantic-code-search-superseded/README.md.",
+  "extractors_version": "1.0",
+  "default": {
+    "confidence": {
+      "calls_unresolved": 0.55,
+      "refs_unresolved": 0.45,
+      "imports_unresolved": 0.65,
+      "resolved_link_bonus": 0.25
+    },
+    "limits": {
+      "max_edges_per_chunk": 500,
+      "max_evidence_chars": 220
+    },
+    "normalization": {
+      "case_fold_identifiers": false,
+      "strip_generic_args": true,
+      "strip_call_args": true,
+      "strip_whitespace": true
+    }
+  },
+
+  "languages": {
+    "csharp": {
+      "tree_sitter_language": "c_sharp",
+      "file_globs": ["**/*.cs"],
+      "symbol_definitions": {
+        "kinds": [
+          {
+            "kind": "method",
+            "node_types": ["method_declaration", "constructor_declaration", "local_function_statement"]
+          },
+          { "kind": "class", "node_types": ["class_declaration", "record_declaration"] },
+          { "kind": "interface", "node_types": ["interface_declaration"] },
+          { "kind": "struct", "node_types": ["struct_declaration"] },
+          { "kind": "enum", "node_types": ["enum_declaration"] }
+        ],
+        "name_fields": ["name"],
+        "signature_node_types": ["parameter_list", "type_parameter_list", "base_list"],
+        "export_heuristics": {
+          "public_modifiers_node_types": ["modifier"],
+          "public_modifier_texts": ["public"]
+        }
+      },
+
+      "imports": {
+        "nodes": ["using_directive"],
+        "extract": [
+          { "from_node": "using_directive", "path": ["name"], "as": "dst_name" }
+        ]
+      },
+
+      "calls": {
+        "call_site_nodes": ["invocation_expression", "object_creation_expression"],
+        "callee_extractors": [
+          {
+            "when_node_type": "invocation_expression",
+            "candidates": [
+              { "field": "expression", "preferred_node_types": ["member_access_expression", "identifier", "generic_name", "qualified_name"] }
+            ]
+          },
+          {
+            "when_node_type": "object_creation_expression",
+            "candidates": [
+              { "field": "type", "preferred_node_types": ["qualified_name", "identifier", "generic_name"] }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["member_access_expression", "qualified_name"],
+        "leaf_identifier_nodes": ["identifier"],
+        "call_text_fallback": true
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "generic_name", "qualified_name", "member_access_expression"],
+        "ignore_context_nodes": ["using_directive", "comment", "string_literal"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "java": {
+      "tree_sitter_language": "java",
+      "file_globs": ["**/*.java"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "method", "node_types": ["method_declaration", "constructor_declaration"] },
+          { "kind": "class", "node_types": ["class_declaration"] },
+          { "kind": "interface", "node_types": ["interface_declaration"] },
+          { "kind": "enum", "node_types": ["enum_declaration"] }
+        ],
+        "name_fields": ["name"],
+        "signature_node_types": ["formal_parameters", "type_parameters", "throws"],
+        "export_heuristics": {
+          "public_modifiers_node_types": ["modifiers"],
+          "public_modifier_texts": ["public"]
+        }
+      },
+
+      "imports": {
+        "nodes": ["import_declaration", "package_declaration"],
+        "extract": [
+          { "from_node": "import_declaration", "path": ["name"], "as": "dst_name" },
+          { "from_node": "package_declaration", "path": ["name"], "as": "package_name" }
+        ]
+      },
+
+      "calls": {
+        "call_site_nodes": ["method_invocation", "object_creation_expression", "method_reference"],
+        "callee_extractors": [
+          {
+            "when_node_type": "method_invocation",
+            "candidates": [
+              { "field": "name", "preferred_node_types": ["identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "object_creation_expression",
+            "candidates": [
+              { "field": "type", "preferred_node_types": ["scoped_identifier", "identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "method_reference",
+            "candidates": [
+              { "field": "name", "preferred_node_types": ["identifier"] }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["field_access", "scoped_identifier"],
+        "leaf_identifier_nodes": ["identifier"],
+        "call_text_fallback": true
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "scoped_identifier", "field_access"],
+        "ignore_context_nodes": ["import_declaration", "package_declaration", "comment", "string_literal"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "python": {
+      "tree_sitter_language": "python",
+      "file_globs": ["**/*.py"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "function", "node_types": ["function_definition"] },
+          { "kind": "class", "node_types": ["class_definition"] }
+        ],
+        "name_fields": ["name"],
+        "signature_node_types": ["parameters"],
+        "export_heuristics": {
+          "public_by_name": { "exclude_prefixes": ["_"] }
+        }
+      },
+
+      "imports": {
+        "nodes": ["import_statement", "import_from_statement"],
+        "extract": [
+          { "from_node": "import_statement", "path": ["name"], "as": "dst_name" },
+          { "from_node": "import_from_statement", "path": ["module_name"], "as": "dst_name" }
+        ]
+      },
+
+      "calls": {
+        "call_site_nodes": ["call"],
+        "callee_extractors": [
+          {
+            "when_node_type": "call",
+            "candidates": [
+              { "field": "function", "preferred_node_types": ["attribute", "identifier"] }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["attribute"],
+        "leaf_identifier_nodes": ["identifier"],
+        "call_text_fallback": true
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "attribute"],
+        "ignore_context_nodes": ["import_statement", "import_from_statement", "comment", "string", "string_content"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "javascript": {
+      "tree_sitter_language": "javascript",
+      "file_globs": ["**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "function", "node_types": ["function_declaration", "generator_function_declaration"] },
+          { "kind": "method", "node_types": ["method_definition"] },
+          { "kind": "class", "node_types": ["class_declaration"] }
+        ],
+        "name_fields": ["name"],
+        "signature_node_types": ["formal_parameters"],
+        "export_heuristics": {
+          "nodes": ["export_statement", "export_clause", "export_default_declaration"]
+        }
+      },
+
+      "imports": {
+        "nodes": ["import_statement", "import_clause", "require_call"],
+        "extract": [
+          { "from_node": "import_statement", "path": ["source"], "as": "dst_name" }
+        ],
+        "heuristics": {
+          "require_call": {
+            "call_node_type": "call_expression",
+            "callee_identifier": "require",
+            "arg_string_node_types": ["string", "string_fragment", "string_literal"]
+          }
+        }
+      },
+
+      "calls": {
+        "call_site_nodes": ["call_expression", "new_expression"],
+        "callee_extractors": [
+          {
+            "when_node_type": "call_expression",
+            "candidates": [
+              { "field": "function", "preferred_node_types": ["member_expression", "identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "new_expression",
+            "candidates": [
+              { "field": "constructor", "preferred_node_types": ["identifier", "member_expression"] }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["member_expression"],
+        "leaf_identifier_nodes": ["identifier", "property_identifier", "private_property_identifier"],
+        "call_text_fallback": true
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "member_expression"],
+        "ignore_context_nodes": ["import_statement", "comment", "string", "template_string"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "typescript": {
+      "tree_sitter_language": "tsx",
+      "file_globs": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "function", "node_types": ["function_declaration"] },
+          { "kind": "method", "node_types": ["method_definition"] },
+          { "kind": "class", "node_types": ["class_declaration"] },
+          { "kind": "interface", "node_types": ["interface_declaration"] },
+          { "kind": "type_alias", "node_types": ["type_alias_declaration"] },
+          { "kind": "enum", "node_types": ["enum_declaration"] }
+        ],
+        "name_fields": ["name"],
+        "signature_node_types": ["formal_parameters", "type_parameters"],
+        "export_heuristics": {
+          "nodes": ["export_statement", "export_clause", "export_default_declaration"]
+        }
+      },
+
+      "imports": {
+        "nodes": ["import_statement"],
+        "extract": [
+          { "from_node": "import_statement", "path": ["source"], "as": "dst_name" }
+        ]
+      },
+
+      "calls": {
+        "call_site_nodes": ["call_expression", "new_expression"],
+        "callee_extractors": [
+          {
+            "when_node_type": "call_expression",
+            "candidates": [
+              { "field": "function", "preferred_node_types": ["member_expression", "identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "new_expression",
+            "candidates": [
+              { "field": "constructor", "preferred_node_types": ["identifier", "member_expression"] }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["member_expression"],
+        "leaf_identifier_nodes": ["identifier", "property_identifier", "private_property_identifier", "type_identifier"],
+        "call_text_fallback": true
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "member_expression", "type_identifier"],
+        "ignore_context_nodes": ["import_statement", "comment", "string", "template_string"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "cobol": {
+      "tree_sitter_language": "cobol",
+      "file_globs": ["**/*.cbl", "**/*.cob", "**/*.cpy"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "program", "node_types": ["PROGRAM"] },
+          { "kind": "paragraph", "node_types": ["PARAGRAPH"] },
+          { "kind": "section", "node_types": ["SECTION"] }
+        ],
+        "name_fields": [],
+        "name_extraction": {
+          "header_identifier_nodes": ["qualified_word", "WORD"],
+          "header_scan_max_tokens": 12
+        },
+        "signature_node_types": [],
+        "export_heuristics": {
+          "public_by_default": true
+        }
+      },
+
+      "imports": {
+        "nodes": ["COPY"],
+        "extract": [
+          { "from_node": "COPY", "path": [], "as": "dst_name" }
+        ],
+        "heuristics": {
+          "copy_statement": {
+            "target_identifier_nodes": ["qualified_word", "WORD"]
+          }
+        }
+      },
+
+      "calls": {
+        "call_site_nodes": ["PERFORM", "CALL"],
+        "callee_extractors": [
+          {
+            "when_node_type": "PERFORM",
+            "candidates": [
+              { "scan_descendants_for_first": ["qualified_word", "WORD"], "as": "dst_name" }
+            ]
+          },
+          {
+            "when_node_type": "CALL",
+            "candidates": [
+              { "scan_descendants_for_first": ["qualified_word", "WORD", "literal"], "as": "dst_name" }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["qualified_word"],
+        "leaf_identifier_nodes": ["WORD"],
+        "call_text_fallback": true,
+        "dialect_notes": "COBOL grammars vary; PERFORM graph is the reliable baseline. CALL node may not exist in some parsers—if absent, ignore CALL and rely on PERFORM."
+      },
+
+      "references": {
+        "reference_nodes": ["qualified_word", "WORD"],
+        "ignore_context_nodes": ["comment", "literal"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        }
+      }
+    },
+
+    "sql": {
+      "tree_sitter_language": "sql",
+      "file_globs": ["**/*.sql"],
+      "symbol_definitions": {
+        "kinds": [
+          { "kind": "create_function", "node_types": ["create_function_statement", "create_function"] },
+          { "kind": "create_procedure", "node_types": ["create_procedure_statement", "create_procedure"] },
+          { "kind": "create_view", "node_types": ["create_view_statement", "create_view"] },
+          { "kind": "create_table", "node_types": ["create_table_statement", "create_table"] }
+        ],
+        "name_fields": ["name", "identifier"],
+        "signature_node_types": ["parameters"],
+        "export_heuristics": {
+          "public_by_default": true
+        }
+      },
+
+      "calls": {
+        "call_site_nodes": ["function_call", "call_statement", "execute_statement"],
+        "callee_extractors": [
+          {
+            "when_node_type": "function_call",
+            "candidates": [
+              { "field": "name", "preferred_node_types": ["identifier", "qualified_identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "call_statement",
+            "candidates": [
+              { "field": "procedure", "preferred_node_types": ["identifier", "qualified_identifier"] }
+            ]
+          },
+          {
+            "when_node_type": "execute_statement",
+            "candidates": [
+              { "scan_descendants_for_first": ["identifier", "qualified_identifier"], "as": "dst_name" }
+            ]
+          }
+        ],
+        "qualifier_nodes": ["qualified_identifier", "schema_qualified_name"],
+        "leaf_identifier_nodes": ["identifier"],
+        "call_text_fallback": true,
+        "dialect_notes": "SQL node kinds vary by grammar/dialect. Treat this as a baseline; at index-time, validate node kinds exist in the active parser and disable missing ones."
+      },
+
+      "imports": {
+        "nodes": [],
+        "extract": []
+      },
+
+      "references": {
+        "reference_nodes": ["identifier", "qualified_identifier", "schema_qualified_name"],
+        "ignore_context_nodes": ["string", "comment"],
+        "emit": {
+          "identifier_like": true,
+          "qualified_like": true
+        },
+        "object_reference_heuristics": {
+          "table_like_nodes": ["table_name", "table_reference"],
+          "view_like_nodes": ["view_name"],
+          "column_like_nodes": ["column_name"]
+        }
+      }
+    }
+  }
+}

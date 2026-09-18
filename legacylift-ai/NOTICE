@@ -1,0 +1,13 @@
+LegacyLift
+Copyright 2026 CapTech Ventures, Inc.
+
+This product includes software developed by Anthropic, PBC:
+
+    Code Modernization Plugin (Commit 96e3e8c)
+    Copyright 2026 Anthropic, PBC
+    Licensed under the Apache License, Version 2.0
+    Source: https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-modernization
+
+Files in this repository that were modified from the Anthropic Materials carry
+a prominent notice stating that CapTech Ventures, Inc. changed them, as required
+by Section 4(b) of the Apache License.

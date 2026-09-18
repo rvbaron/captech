@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://legacylift.ai/schemas/relation.json",
+  "title": "Relation",
+  "description": "Represents a relationship between two entities in the codebase",
+  "type": "object",
+  "required": ["id", "type", "source_id", "target_id", "file", "line"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique, deterministic identifier for the relation (content-based hash)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "type": {
+      "type": "string",
+      "description": "The kind of relationship (uppercase = semantic types from ChatGPT design)",
+      "enum": [
+        "inherits",
+        "implements",
+        "extends",
+        "uses",
+        "calls",
+        "invokes",
+        "references",
+        "imports",
+        "depends_on",
+        "contains",
+        "owns",
+        "has_member",
+        "reads_from",
+        "writes_to",
+        "queries",
+        "foreign_key",
+        "join",
+        "triggers",
+        "decorates",
+        "annotates",
+        "routes_to",
+        "EXPOSES_ENDPOINT",
+        "CALLS",
+        "INVOKES",
+        "WRITES_TABLE",
+        "READS_TABLE",
+        "QUERIES",
+        "USES_DTO",
+        "RETURNS_DTO",
+        "ACCEPTS_DTO",
+        "REQUIRES_POLICY",
+        "AUTHENTICATES_VIA",
+        "PUBLISHES_EVENT",
+        "CONSUMES_EVENT"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Entity ID of the source with domain prefix (e.g., cs:orders-orderservice-abc123)",
+      "pattern": "^(cs|db|ep|auth|svc|dto|proc|view|trig|ent):[a-z0-9-]+$"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "Entity ID of the target with domain prefix (e.g., db:orders-ordertable-def456)",
+      "pattern": "^(cs|db|ep|auth|svc|dto|proc|view|trig|ent):[a-z0-9-]+$"
+    },
+    "file": {
+      "type": "string",
+      "description": "Relative path from repository root where the relationship is expressed",
+      "minLength": 1
+    },
+    "line": {
+      "type": "integer",
+      "description": "Line number where the relationship occurs (1-indexed)",
+      "minimum": 1
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Additional relationship-specific metadata",
+      "properties": {
+        "cardinality": {
+          "type": "string",
+          "description": "Relationship cardinality",
+          "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"]
+        },
+        "cascade": {
+          "type": "string",
+          "description": "Cascade behavior (for foreign keys)",
+          "enum": ["none", "delete", "update", "restrict", "set_null"]
+        },
+        "is_nullable": {
+          "type": "boolean",
+          "description": "Whether the relationship is optional"
+        },
+        "via": {
+          "type": "string",
+          "description": "The property, field, or column name through which the relationship exists"
+        }
+      }
+    }
+  }
+}

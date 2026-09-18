@@ -1,0 +1,90 @@
+name: Tests
+
+# The repository had no test CI until 2026-09-14 — CodeQL and the @claude PR
+# action were the only workflows — while the ExecPlans treat a green
+# legacylift-search suite as an acceptance floor. This runs it, plus a build of
+# the two platform-ui halves, which have no tests of their own yet (see
+# docs/architecture.md §8, "Known gaps") and so are gated on compiling.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A force-push should not leave two runs racing on the same ref.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  legacylift-search:
+    name: legacylift-search (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # 3.12 is not a preference: tree-sitter 0.25.2 and the language pack are
+      # what pin it, and .python-version records the same.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/legacylift_search/pyproject.toml
+
+      # sentence-transformers pulls torch, and PyPI's default Linux wheel is the
+      # CUDA build (~2.5 GB). The suite never runs a real model — every test
+      # uses the `hash` provider or a fake client — so take the CPU wheel.
+      # `[dev]` is what brings pytest: it is a dev extra, not a runtime
+      # dependency, so a bare `-e tools/legacylift_search` installs the
+      # indexer without a test runner and the next step fails.
+      - name: Install legacylift-search (CPU torch)
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            --extra-index-url https://download.pytorch.org/whl/cpu \
+            -e "tools/legacylift_search[dev]"
+
+      # No credentials and no model download: boto3 is faked through sys.modules
+      # and the embedder is the deterministic hash provider. One test does reach
+      # for the network -- it asks sentence-transformers to load a deliberately
+      # bogus model id and asserts on the wrapper's RuntimeError -- and passes
+      # either way, because a 404 and a connection failure both raise it.
+      - name: Run the suite
+        working-directory: tools/legacylift_search
+        run: pytest -q --durations=25
+
+  platform-ui:
+    name: platform-ui (build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build the API
+        run: dotnet build platform-ui/api --nologo
+
+      # Angular 21 needs Node >= 22.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # --legacy-peer-deps is required, not tidy-up: npm's peer resolver crashes
+      # on vitest 4's peer graph, which Angular 21 pulls in as its default test
+      # runner. Drop the flag and install fails outright.
+      - name: Install web dependencies
+        working-directory: platform-ui/web
+        run: npm ci --legacy-peer-deps
+
+      - name: Build the web app
+        working-directory: platform-ui/web
+        run: npm run build

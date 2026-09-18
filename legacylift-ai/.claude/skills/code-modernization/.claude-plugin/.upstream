@@ -1,0 +1,59 @@
+# Provenance of the vendored code-modernization plugin.
+#
+# Authored by CapTech; not an upstream file, so it carries no Apache 2.0 §4(b)
+# "changed this file" notice -- that requirement applies to files modified from
+# the Work, not to files added alongside it.
+#
+# This exists because LICENSE.md §9 asserts which upstream commit this fork was
+# taken at, and until this file was added that assertion could not be checked
+# against anything in the repository: the plugin arrived in commit 987701ec
+# ("code-modernization plus extraction comparison", 2026-06-24), whose message
+# records nothing about its origin. Keep the two in agreement -- if you
+# re-vendor, update this file AND LICENSE.md §9 and NOTICE in the same commit.
+
+name:             code-modernization
+upstream_repo:    https://github.com/anthropics/claude-plugins-official
+upstream_path:    plugins/code-modernization
+upstream_commit:  96e3e8c
+upstream_license: Apache-2.0
+copyright:        Copyright 2026 Anthropic, PBC
+
+vendored_in:      987701ec
+vendored_on:      2026-06-24
+
+# How to verify the commit above resolves, and see what has changed upstream:
+#
+#   git clone https://github.com/anthropics/claude-plugins-official /tmp/cpo
+#   git -C /tmp/cpo show --stat 96e3e8c
+#   git -C /tmp/cpo log --oneline 96e3e8c..origin/HEAD -- plugins/code-modernization
+#
+# Local modifications: 28 files came from upstream, of which CapTech has
+# modified 9. Each modified file carries a "Modified by CapTech on <date>:
+# <description>" line, per Apache 2.0 §4(b); an upstream file without one is
+# unmodified. Two further files -- this one and LICENSE.md -- are CapTech
+# ADDITIONS, not modified upstream files, so §4(b) does not apply to them.
+# `.claude-plugin/plugin.json` is the single exception -- it is modified (it
+# carries this fork's `version`) but JSON admits no comment syntax, so its
+# notice lives in the plugin README's License section instead.
+#
+# To list them:
+#
+#   grep -rl 'Modified by CapTech' .claude/skills/code-modernization \n#        --exclude-dir=.claude-plugin
+#
+# (the --exclude-dir keeps THIS file out of its own results -- the phrase
+# appears above, and without it the command reports 10 rather than 9)
+#
+# Licensing: this directory carries TWO licences, covering different things.
+#
+#   LICENSE     Anthropic's, Apache 2.0, verbatim. PRISTINE upstream text --
+#               never edit it. It is the copy §4(a) obliges us to give anyone
+#               who receives this plugin.
+#   LICENSE.md  CapTech's, covering CapTech's MODIFICATIONS ONLY. A byte-
+#               identical copy of the repository root's LICENSE.md (see its
+#               §2 and §9(d)); edit the root one and copy it over, never the
+#               reverse. It is here because this directory gets copied out
+#               standalone, so CapTech's terms have to travel with it.
+#
+# Attribution is in NOTICE at the repository root. Both duplications are
+# CI-enforced by tools/legacylift_search/tests/test_license_files_are_in_sync.py.
+# See docs/architecture.md §3 for the reasoning.

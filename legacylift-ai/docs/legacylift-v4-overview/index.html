@@ -1,0 +1,1635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Engineering briefing on everything that shipped into LegacyLift v4 since v3.7.0 — the Layer 0 code index, the modernization pathways, scope fixes, capability domains, and the requirements store.">
+<style>
+  /* Host skeleton equivalent to the Artifact wrapper, so this file opens
+     standalone in a browser with the same rendering. */
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px system-ui, sans-serif; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>LegacyLift v4</title>
+<!-- Fonts are vendored under assets/fonts/ so this file renders correctly
+     offline and from a plain checkout. See README.md to regenerate. -->
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<style>
+  /* ---- Tokens: complete light palette on bare :root ---------------------- */
+  :root {
+    /* CapTech brand system */
+    --brand:      #005eb8;   /* CapTech Blue    PMS 300 C */
+    --deep:       #003865;   /* Dark Blue       PMS 2955 C */
+    --signal:     #fdda24;   /* Yellow          PMS 115 C  — rule lines only */
+    --sky:        #00a5df;   /* Sky Blue        PMS 2202 C */
+
+    /* blue-biased neutrals */
+    --paper:      #f4f7fa;
+    --panel:      #ffffff;
+    --panel-2:    #eef2f7;
+    --ink:        #16212c;
+    --ink-2:      #46596b;
+    --ink-3:      #6f8394;
+    --hair:       #d5dde5;
+    --hair-2:     #e6ecf2;
+
+    --chart:      #005eb8;
+    --chart-ink:  #16212c;
+
+    --ok:         #1b7f4b;
+    --warn:       #9a6a00;
+
+    --measure:    68ch;
+    --wide:       1040px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --brand:   #4da3ea;
+      --deep:    #8fc6f0;
+      --signal:  #f5cf2e;
+      --sky:     #58c6f0;
+
+      --paper:   #0d151d;
+      --panel:   #131f2a;
+      --panel-2: #1a2835;
+      --ink:     #e8eef4;
+      --ink-2:   #a9bccb;
+      --ink-3:   #7e93a4;
+      --hair:    #2a3a49;
+      --hair-2:  #203040;
+
+      --chart:     #4da3ea;
+      --chart-ink: #e8eef4;
+
+      --ok:      #58c48a;
+      --warn:    #e0b34a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --brand:   #4da3ea;
+    --deep:    #8fc6f0;
+    --signal:  #f5cf2e;
+    --sky:     #58c6f0;
+
+    --paper:   #0d151d;
+    --panel:   #131f2a;
+    --panel-2: #1a2835;
+    --ink:     #e8eef4;
+    --ink-2:   #a9bccb;
+    --ink-3:   #7e93a4;
+    --hair:    #2a3a49;
+    --hair-2:  #203040;
+
+    --chart:     #4da3ea;
+    --chart-ink: #e8eef4;
+
+    --ok:      #58c48a;
+    --warn:    #e0b34a;
+  }
+
+  /* ---- Base -------------------------------------------------------------- */
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Hanken Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 0 96px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  @media (min-width: 1140px) {
+    .shell { grid-template-columns: 232px minmax(0, 1fr); gap: 56px; }
+  }
+
+  /* ---- Rail -------------------------------------------------------------- */
+  .rail { display: none; }
+  @media (min-width: 1140px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      padding-block: 48px 0;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+  }
+  .rail-mark {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--signal);
+    margin-bottom: 18px;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    counter-reset: nav;
+  }
+  .rail a {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: 14.5px;
+    line-height: 1.35;
+    border-top: 1px solid transparent;
+  }
+  .rail a:hover { color: var(--brand); }
+  .rail a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .rail a::before {
+    counter-increment: nav;
+    content: counter(nav, decimal-leading-zero);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    padding-top: 3px;
+    flex: none;
+  }
+  .rail-foot {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hair);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--ink-3);
+  }
+
+  /* ---- Column ------------------------------------------------------------ */
+  main { min-width: 0; }
+  .col { max-width: var(--measure); }
+  .bleed { max-width: var(--wide); }
+
+  /* ---- Masthead ---------------------------------------------------------- */
+  header.mast { padding-block: 52px 0; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(38px, 6.4vw, 62px);
+    line-height: 1.02;
+    letter-spacing: -.022em;
+    font-weight: 800;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  h1 .v { color: var(--brand); }
+  .dek {
+    font-size: clamp(18px, 2.2vw, 21px);
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  .delta {
+    margin-top: 34px;
+    border-top: 3px solid var(--signal);
+    border-bottom: 1px solid var(--hair);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .delta div {
+    padding: 16px 20px 18px 0;
+  }
+  .delta dt {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 6px;
+  }
+  .delta dd {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .delta dd b {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -.02em;
+    display: block;
+    color: var(--brand);
+  }
+
+  /* ---- Sections ---------------------------------------------------------- */
+  section { padding-block: 64px 0; scroll-margin-top: 24px; }
+  .sec-head {
+    border-top: 3px solid var(--signal);
+    padding-top: 14px;
+    margin-bottom: 26px;
+    max-width: var(--wide);
+  }
+  .sec-head .num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: clamp(26px, 3.4vw, 34px);
+    line-height: 1.12;
+    letter-spacing: -.018em;
+    font-weight: 700;
+    margin: 6px 0 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    margin: 38px 0 10px;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 30px 0 10px;
+  }
+  p { margin: 0 0 18px; }
+  a { color: var(--brand); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  ul.plain, ol.plain { margin: 0 0 20px; padding-left: 22px; }
+  ul.plain li, ol.plain li { margin-bottom: 8px; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .88em;
+  }
+  code {
+    background: var(--panel-2);
+    padding: .1em .34em;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  /* ---- Stat tiles -------------------------------------------------------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--hair);
+    border: 1px solid var(--hair);
+    max-width: var(--wide);
+  }
+  .tile {
+    background: var(--panel);
+    padding: 18px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tile .fig {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1.05;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .fig small { font-size: 15px; letter-spacing: 0; color: var(--ink-2); }
+  .tile .lbl {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .tile .sub {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  /* ---- Notes ------------------------------------------------------------- */
+  .note, .caution {
+    max-width: var(--wide);
+    margin: 26px 0;
+    padding: 2px 0 2px 20px;
+    border-left: 3px solid var(--brand);
+  }
+  .caution { border-left-color: var(--warn); }
+  .note h5, .caution h5 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .caution h5 { color: var(--warn); }
+  .note p:last-child, .caution p:last-child { margin-bottom: 0; }
+  .note p, .caution p { font-size: 16px; }
+
+  /* ---- Tables ------------------------------------------------------------ */
+  .tw { max-width: var(--wide); overflow-x: auto; margin: 22px 0 26px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 15px;
+    min-width: 520px;
+  }
+  th {
+    text-align: left;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    padding: 0 14px 8px 0;
+    border-bottom: 2px solid var(--hair);
+    vertical-align: bottom;
+  }
+  td {
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--hair-2);
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+  td.n { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  td.k { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13.5px; white-space: nowrap; color: var(--ink); }
+  tr:last-child td { border-bottom: none; }
+  caption {
+    caption-side: bottom;
+    text-align: left;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    padding-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* ---- Figures ----------------------------------------------------------- */
+  figure {
+    margin: 30px 0 34px;
+    max-width: var(--wide);
+  }
+  figure svg { display: block; width: 100%; height: auto; max-width: 100%; }
+  figcaption {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    padding-top: 12px;
+    border-top: 1px solid var(--hair-2);
+    margin-top: 12px;
+  }
+  .fig-frame {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    padding: 22px 20px;
+    overflow-x: auto;
+  }
+
+  /* ---- Requirement anatomy ----------------------------------------------- */
+  .anat {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-top: 3px solid var(--brand);
+    padding: 22px 20px;
+    max-width: var(--wide);
+    margin: 28px 0;
+  }
+  .anat .stmt {
+    font-size: clamp(17px, 2.1vw, 20px);
+    line-height: 1.85;
+    margin: 0 0 8px;
+  }
+  .anat .slot {
+    position: relative;
+    padding: 1px 2px;
+    border-bottom: 2px solid var(--sky);
+  }
+  .anat .slot.kw {
+    border-bottom-color: var(--signal);
+    font-weight: 600;
+  }
+  .anat .tag {
+    display: inline-block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    vertical-align: super;
+    margin-left: 3px;
+  }
+  .anat .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hair-2);
+  }
+  .anat .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    padding: 3px 8px;
+    background: var(--panel-2);
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .anat .chip b { color: var(--ink); font-weight: 600; }
+
+  /* ---- Pathway chips ----------------------------------------------------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--ink-2);
+    margin-top: 14px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 22px; height: 3px; flex: none; }
+
+  /* ---- Footer ------------------------------------------------------------ */
+  footer {
+    margin-top: 72px;
+    padding-top: 20px;
+    border-top: 3px solid var(--signal);
+    max-width: var(--wide);
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+  footer p { margin-bottom: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+</head>
+<body>
+<div class="shell">
+
+  <nav class="rail" aria-label="Sections">
+    <div class="rail-mark">LegacyLift&nbsp;v4</div>
+    <ol>
+      <li><a href="#glance">Facts at a glance</a></li>
+      <li><a href="#shift">What changed at the foundation</a></li>
+      <li><a href="#pathway">Assess, decide, then one of three pathways</a></li>
+      <li><a href="#layer0">Layer 0: the code index</a></li>
+      <li><a href="#scope">What is actually in scope</a></li>
+      <li><a href="#domains">Capability domains</a></li>
+      <li><a href="#reqs">Requirements as data, not prose</a></li>
+      <li><a href="#surface">The review surface</a></li>
+      <li><a href="#research">The research basis</a></li>
+      <li><a href="#flight">In flight, and known gaps</a></li>
+    </ol>
+    <div class="rail-foot">
+      285 commits<br>
+      2026-04-23 &rarr; 2026-09-15<br>
+      released as <span style="color:var(--brand)">v4.0.0</span> on <span style="color:var(--brand)">main</span>
+    </div>
+  </nav>
+
+  <main>
+
+    <header class="mast">
+      <p class="eyebrow">CapTech &middot; LegacyLift &middot; engineering briefing for the CTO</p>
+      <h1>What shipped into <span class="v">LegacyLift&nbsp;v4</span></h1>
+      <p class="dek">Since <code>v3.7.0</code> in April, LegacyLift stopped being a documentation
+        generator with a web front end and became a modernization platform: a deterministic code
+        index underneath, Anthropic's <code>code-modernization</code> plugin as the workflow spine,
+        and business requirements stored as queryable records with a review lifecycle instead of
+        markdown that the next run overwrites. It shipped as <b>v4.0.0</b> on 2026-09-15.</p>
+
+      <dl class="delta">
+        <div>
+          <dt>Release delta</dt>
+          <dd><b>285</b>commits since <code>v3.7.0</code></dd>
+        </div>
+        <div>
+          <dt>Window</dt>
+          <dd><b>4.8 months</b>23 Apr &rarr; 15 Sep 2026</dd>
+        </div>
+        <div>
+          <dt>New engine</dt>
+          <dd><b>+78,098</b>lines under <code>tools/</code>, from nothing</dd>
+        </div>
+        <div>
+          <dt>Retired</dt>
+          <dd><b>&minus;37,961</b>lines of web UI and its infrastructure</dd>
+        </div>
+        <div>
+          <dt>New read surface</dt>
+          <dd><b>+15,517</b>lines under <code>platform-ui/</code></dd>
+        </div>
+      </dl>
+    </header>
+
+    <!-- ============================================================ 01 -->
+    <section id="glance">
+      <div class="sec-head">
+        <span class="num">01 &nbsp;/&nbsp; Scoreboard</span>
+        <h2>Facts at a glance</h2>
+      </div>
+
+      <p class="col">Every figure below was measured in the repository at the <code>v4.0.0</code>
+        release point on 2026-09-15, not estimated. The reference corpus is a real client Java/JSP
+        estate, referred to here as the NNG application.</p>
+
+      <h4>The engine — <code>legacylift-search</code></h4>
+      <div class="tiles">
+        <div class="tile">
+          <span class="fig">16,017</span>
+          <span class="lbl">lines of Python</span>
+          <span class="sub">45 modules · plus 10,009 comment lines</span>
+        </div>
+        <div class="tile">
+          <span class="fig">1,280</span>
+          <span class="lbl">automated tests, all passing</span>
+          <span class="sub">64 modules · suite green 2026-09-15 · offline</span>
+        </div>
+        <div class="tile">
+          <span class="fig">30</span>
+          <span class="lbl">CLI commands</span>
+          <span class="sub">16 index &amp; graph · 14 under <code>requirements</code></span>
+        </div>
+        <div class="tile">
+          <span class="fig">24</span>
+          <span class="lbl">SQLite tables across two stores</span>
+          <span class="sub">9 disposable · 15 durable</span>
+        </div>
+      </div>
+
+      <h4>Measured against the reference corpus</h4>
+      <div class="tiles">
+        <div class="tile">
+          <span class="fig">1,504</span>
+          <span class="lbl">source files discovered</span>
+          <span class="sub">up from 1,229 before the scope fix</span>
+        </div>
+        <div class="tile">
+          <span class="fig">16,268</span>
+          <span class="lbl">symbols extracted</span>
+          <span class="sub">every one with a content hash</span>
+        </div>
+        <div class="tile">
+          <span class="fig">74,541</span>
+          <span class="lbl">code-graph edges</span>
+          <span class="sub">confidence-scored, unresolved edges kept</span>
+        </div>
+        <div class="tile">
+          <span class="fig">15,398</span>
+          <span class="lbl">searchable code chunks</span>
+          <span class="sub">tagged into 12 capability domains</span>
+        </div>
+      </div>
+
+      <h4>Requirements</h4>
+      <div class="tiles">
+        <div class="tile">
+          <span class="fig">437</span>
+          <span class="lbl">business rules mined in one run</span>
+          <span class="sub">four rounds · stored as 379 records</span>
+        </div>
+        <div class="tile">
+          <span class="fig">10</span>
+          <span class="lbl">requirement sentence patterns</span>
+          <span class="sub">4 behavioral · 6 definitional</span>
+        </div>
+        <div class="tile">
+          <span class="fig">28</span>
+          <span class="lbl">notation validator rules</span>
+          <span class="sub"><code>ERROR</code> blocks approval; <code>WARN</code> never does</span>
+        </div>
+        <div class="tile">
+          <span class="fig">42</span>
+          <span class="lbl">columns on one requirement record</span>
+          <span class="sub">+ 14 companion tables</span>
+        </div>
+      </div>
+
+      <h4>Research reviewed for the requirements work</h4>
+      <div class="tiles">
+        <div class="tile">
+          <span class="fig">13</span>
+          <span class="lbl">primary sources acquired and read</span>
+          <span class="sub">standards, books, papers, one prototype</span>
+        </div>
+        <div class="tile">
+          <span class="fig">9</span>
+          <span class="lbl">standards and specifications</span>
+          <span class="sub">ISO/IEC/IEEE, OMG</span>
+        </div>
+        <div class="tile">
+          <span class="fig">10</span>
+          <span class="lbl">arXiv preprints cited</span>
+          <span class="sub">plus one SLR spanning 24 studies</span>
+        </div>
+        <div class="tile">
+          <span class="fig">20</span>
+          <span class="lbl">notation survey threads</span>
+          <span class="sub">EARS, SBVR, DMN, KDM, Volere, Planguage…</span>
+        </div>
+      </div>
+
+      <div class="note">
+        <h5>Why the test count matters more than the line count</h5>
+        <p>The engine is deterministic infrastructure that an LLM then reasons over. Determinism is
+          only a claim until it is pinned: the 1,280 tests run against a polyglot fixture repository
+          with a hash-based embedder, so the whole suite runs offline and a regression in chunking,
+          graph resolution or requirement identity fails the build rather than surfacing in a client
+          deliverable. As of v4.0.0 that is enforced rather than remembered &mdash; a
+          <code>tests.yml</code> CI job runs the suite on every pull request to <code>main</code>,
+          alongside <code>dotnet build</code> and <code>ng build</code> for the review
+          surface.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 02 -->
+    <section id="shift">
+      <div class="sec-head">
+        <span class="num">02 &nbsp;/&nbsp; Foundation</span>
+        <h2>What changed at the foundation</h2>
+      </div>
+
+      <p class="col">v3 was a set of Claude Code skills that read a repository and wrote markdown
+        documents, fronted by a web application. v4 replaced all of it: that front end is gone —
+        a new read-only review surface took its place (§08) — and so is the reliance on those
+        skills. In their place are a deterministic index of the code and
+        Anthropic's <code>code-modernization</code> plugin as the sequence a modernization
+        engagement actually follows. v4 derives everything it needs from the source repository and
+        its own index &mdash; it does not call the v3 skills, read their output, or fall back to
+        them.</p>
+
+      <p class="col">The two are therefore separate offerings, and an engagement runs one or the
+        other. <strong>v4 is the accuracy option</strong>: it produces the most accurate and most
+        detailed requirements reverse engineering available, and it costs more to run and asks more
+        of the estate &mdash; <code>/modernize-preflight</code> is what checks whether those
+        prerequisites are met. <strong>v3.7 remains the lower-cost option</strong>, yielding fewer
+        requirements in less depth, for clients who cannot or do not want to meet those
+        prerequisites, or who would rather spend less than get the most accurate result. It ships as
+        the <code>legacylift-classic</code> plugin and is self-contained: it needs no index and no
+        data store.</p>
+
+      <div class="tw">
+        <table>
+          <caption>The plugin is Apache-2.0 from Anthropic, and v4.0.0 made that traceable rather
+            than implied. Nine files in our copy carry a CapTech modification line recording what we
+            changed and when; the pristine upstream <code>LICENSE</code> ships unmodified beside
+            CapTech's own terms and a root <code>NOTICE</code>;
+            <code>.claude-plugin/.upstream</code> records the upstream commit this fork came from;
+            and a test fails the build if the duplicated licence copies drift.</caption>
+          <thead>
+            <tr><th>Concern</th><th>v3.7.0</th><th>v4</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="k">Delivery surface</td>
+              <td>Web application + skills</td>
+              <td>Slash commands and a CLI, plus a read-only review surface. The v3 web application
+                is deleted; nothing writes through a browser.</td>
+            </tr>
+            <tr>
+              <td class="k">Code discovery</td>
+              <td><code>grep</code> by keyword; coverage was a guess</td>
+              <td>Hybrid semantic + lexical index; coverage is a measured percentage of chunks</td>
+            </tr>
+            <tr>
+              <td class="k">Workflow</td>
+              <td>Run a documentation skill per document</td>
+              <td>Enforced sequence: preflight &rarr; assess &rarr; map &rarr; extract-rules &rarr; brief &rarr; build &rarr; harden</td>
+            </tr>
+            <tr>
+              <td class="k">Business rules</td>
+              <td>A markdown file, overwritten by the next run</td>
+              <td>Records in SQLite with citations, a lifecycle and a merge-on-re-run guarantee</td>
+            </tr>
+            <tr>
+              <td class="k">Architecture diagram</td>
+              <td>Authored by an LLM into <code>.mmd</code></td>
+              <td>Rendered deterministically from the domain catalog in SQLite</td>
+            </tr>
+            <tr>
+              <td class="k">Domain knowledge</td>
+              <td>Namespace prefixes, or a markdown table nothing could query</td>
+              <td>Every file assigned to one capability domain, durable across re-index</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What the v4 estate is made of</h3>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Component</th><th class="n">Size</th><th>Role</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="k">tools/legacylift_search</td><td class="n">16,017 LOC</td><td>Layer 0 — indexing, retrieval, code graph, requirements store</td></tr>
+            <tr><td class="k">.claude/skills/code-modernization</td><td class="n">10 commands</td><td>The modernization sequence, with 7 specialist agents</td></tr>
+            <tr><td class="k">…/workflows/*.js</td><td class="n">1,872 LOC</td><td>6 deterministic multi-agent orchestrations</td></tr>
+            <tr><td class="k">platform-ui</td><td class="n">15,517 LOC</td><td>The read-only review surface — .NET 10 API + Angular 21, over a prepared copy of the store</td></tr>
+            <tr><td class="k">.claude/skills/legacylift-classic</td><td class="n">18 skills</td><td>LegacyLift v3.7, the separate lower-cost offering — present in the repository, not used by v4</td></tr>
+            <tr><td class="k">docs/exec-plans</td><td class="n">33,082 lines</td><td>Self-contained engineering plans; the record of why each decision was made</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ 03 -->
+    <section id="pathway">
+      <div class="sec-head">
+        <span class="num">03 &nbsp;/&nbsp; Process</span>
+        <h2>Assess, decide, then one of three pathways</h2>
+      </div>
+
+      <p class="col">Modernization programmes fail in a predictable way: transforming code before
+        anyone understands it, or shipping without a harness that would catch behaviour drift. The
+        v4 workflow makes that sequence explicit, and it makes the <em>method</em> a decision rather
+        than an assumption. Four discovery commands produce reviewable artifacts; the brief turns
+        them into a plan a steering committee approves; only then does code get written, by one of
+        three different methods.</p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 420" role="img" aria-label="The modernization sequence: preflight, assess, map and extract-rules feed a modernization brief, which is a human approval gate; the brief selects one of three build methods — uplift, transform or reimagine — and harden runs a security pass on the still-running legacy system.">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+                <polygon points="0,0 10,4 0,8" fill="currentColor"></polygon>
+              </marker>
+            </defs>
+
+            <!-- row 1: discovery -->
+            <g font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)">
+              <text x="30" y="30" letter-spacing="1.6">DISCOVER — REVIEWABLE ARTIFACTS</text>
+            </g>
+            <g>
+              <rect x="30"  y="44" width="170" height="50" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+              <rect x="222" y="44" width="170" height="50" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+              <rect x="414" y="44" width="170" height="50" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+              <rect x="606" y="44" width="170" height="50" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+              <rect x="798" y="44" width="172" height="50" fill="var(--panel)" stroke="var(--brand)" stroke-width="1.5"></rect>
+              <rect x="798" y="44" width="4"  height="50" fill="var(--signal)"></rect>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="12.5" fill="var(--ink)" text-anchor="middle">
+              <text x="115" y="66">preflight</text>
+              <text x="307" y="66">assess</text>
+              <text x="499" y="66">map</text>
+              <text x="691" y="66">extract-rules</text>
+              <text x="886" y="66">brief</text>
+            </g>
+            <g font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">
+              <text x="115" y="82">is the estate ready?</text>
+              <text x="307" y="82">inventory · COCOMO</text>
+              <text x="499" y="82">topology · lineage</text>
+              <text x="691" y="82">rules with citations</text>
+              <text x="886" y="82">approval gate</text>
+            </g>
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)">
+              <line x1="202" y1="69" x2="218" y2="69"></line>
+              <line x1="394" y1="69" x2="410" y2="69"></line>
+              <line x1="586" y1="69" x2="602" y2="69"></line>
+              <line x1="778" y1="69" x2="794" y2="69"></line>
+            </g>
+
+            <!-- fork from brief -->
+            <g stroke="currentColor" color="var(--brand)" stroke-width="1.4" fill="none">
+              <path d="M884 94 L884 140 L260 140"></path>
+              <line x1="260" y1="140" x2="740" y2="140"></line>
+              <line x1="260" y1="140" x2="260" y2="186" marker-end="url(#ar)"></line>
+              <line x1="500" y1="140" x2="500" y2="186" marker-end="url(#ar)"></line>
+              <line x1="740" y1="140" x2="740" y2="186" marker-end="url(#ar)"></line>
+            </g>
+            <text x="500" y="131" font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">the brief recommends which method fits</text>
+
+            <!-- row 2: three methods -->
+            <g>
+              <rect x="160" y="188" width="200" height="76" fill="var(--panel)" stroke="var(--brand)"></rect>
+              <rect x="400" y="188" width="200" height="76" fill="var(--panel)" stroke="var(--brand)"></rect>
+              <rect x="640" y="188" width="200" height="76" fill="var(--panel)" stroke="var(--brand)"></rect>
+              <rect x="400" y="188" width="4" height="76" fill="var(--signal)"></rect>
+              <rect x="640" y="188" width="4" height="76" fill="var(--signal)"></rect>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="13" fill="var(--brand)" text-anchor="middle">
+              <text x="260" y="212">uplift</text>
+              <text x="500" y="212">transform</text>
+              <text x="740" y="212">reimagine</text>
+            </g>
+            <g font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">
+              <text x="260" y="232">same stack, version bump</text>
+              <text x="260" y="248">.NET 4.8 &rarr; .NET 8</text>
+              <text x="500" y="232">one module, cross-stack</text>
+              <text x="500" y="248">strangler fig</text>
+              <text x="740" y="232">greenfield rebuild</text>
+              <text x="740" y="248">from extracted intent</text>
+            </g>
+            <g font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">
+              <text x="260" y="284">equivalence: one suite,</text>
+              <text x="260" y="298">both runtimes</text>
+              <text x="500" y="284">equivalence:</text>
+              <text x="500" y="298">characterization tests</text>
+              <text x="740" y="284">executable</text>
+              <text x="740" y="298">acceptance tests</text>
+            </g>
+
+            <!-- join to harden -->
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.2" fill="none">
+              <path d="M260 310 L260 336 L740 336 M740 310 L740 336 M500 310 L500 336"></path>
+              <line x1="500" y1="336" x2="500" y2="362" marker-end="url(#ar)"></line>
+            </g>
+            <rect x="400" y="364" width="200" height="42" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+            <text x="500" y="382" font-family="'IBM Plex Mono', monospace" font-size="12.5" fill="var(--ink)" text-anchor="middle">harden</text>
+            <text x="500" y="397" font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">security pass on the still-running legacy system</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--signal)"></span>yellow keyline = human approval checkpoint</span>
+          <span><span class="swatch" style="background:var(--brand)"></span>blue outline = writes code</span>
+        </div>
+        <figcaption>The three build commands are three <em>methods</em>, not three tools.
+          <code>uplift</code> exists because the common real case — a supported-version bump — is
+          the one <code>transform</code> gets wrong by rewriting; if its delta catalog shows most of
+          the code is forced to change anyway, it says so and hands off to
+          <code>transform</code>.</figcaption>
+      </figure>
+
+      <div class="note">
+        <h5>Where the commercial value sits</h5>
+        <p>Discovery is the part a client can buy on its own and review before committing to a
+          rebuild: four commands, each producing a standalone artifact with <code>file:line</code>
+          citations. The approval gate between discovery and build is deliberate — it is where a
+          steering committee makes a decision with evidence rather than with a vendor's
+          estimate.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 04 -->
+    <section id="layer0">
+      <div class="sec-head">
+        <span class="num">04 &nbsp;/&nbsp; Engine</span>
+        <h2>Layer 0: the code index</h2>
+      </div>
+
+      <p class="col">Layer 0 is the part of v4 that did not exist before: a Python CLI that builds a
+        local, deterministic index of a legacy repository and answers questions about it without an
+        LLM in the loop. It exists because keyword search has three structural limits — it cannot
+        find conceptually related code that shares no token with the query, it produces a noisy call
+        graph, and its sense of "have we looked everywhere?" is a guess.</p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 360" role="img" aria-label="Three-layer stack. Layer 0 is index.sqlite plus a Chroma vector store, machine-derived and disposable. Layer 1 is knowledge.sqlite, holding domains and generated requirements, which survives a Layer 0 reset. Layer 2 is the skills and commands that read both.">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+                <polygon points="0,0 10,4 0,8" fill="currentColor"></polygon>
+              </marker>
+            </defs>
+
+            <!-- Layer 2 -->
+            <rect x="30" y="20" width="730" height="86" fill="var(--panel-2)" stroke="var(--sky)" stroke-width="1.5"></rect>
+            <text x="50" y="46" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--ink-3)" letter-spacing="1.4">LAYER 2</text>
+            <text x="50" y="70" font-family="'Hanken Grotesk', sans-serif" font-size="16" font-weight="600" fill="var(--ink)">Skills, commands and agents</text>
+            <text x="50" y="90" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">10 /modernize-* commands · 7 specialist agents · 6 workflow scripts</text>
+
+            <!-- Layer 1 -->
+            <rect x="30" y="132" width="730" height="86" fill="var(--panel)" stroke="var(--brand)" stroke-width="2"></rect>
+            <text x="50" y="158" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--brand)" letter-spacing="1.4">LAYER 1 — DURABLE</text>
+            <text x="50" y="182" font-family="'IBM Plex Mono', monospace" font-size="15" font-weight="600" fill="var(--ink)">knowledge.sqlite</text>
+            <text x="50" y="202" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">15 tables · capability domains · generated requirements, their citations, scenarios, findings and review state</text>
+
+            <!-- Layer 0 -->
+            <rect x="30" y="244" width="730" height="86" fill="var(--panel-2)" stroke="var(--deep)" stroke-width="1.5"></rect>
+            <text x="50" y="270" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--ink-3)" letter-spacing="1.4">LAYER 0 — DISPOSABLE</text>
+            <text x="50" y="294" font-family="'IBM Plex Mono', monospace" font-size="15" font-weight="600" fill="var(--ink)">index.sqlite  +  Chroma</text>
+            <text x="50" y="314" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">9 tables · files, chunks, symbols, graph edges, symbol facts · dense vectors, rebuildable at any time</text>
+
+            <!-- arrows -->
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.3" marker-end="url(#ar2)">
+              <line x1="395" y1="244" x2="395" y2="222"></line>
+              <line x1="395" y1="132" x2="395" y2="110"></line>
+            </g>
+            <text x="410" y="236" font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)">subjects · citations anchored to symbols</text>
+            <text x="410" y="124" font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)">queries · reports rendered from the store</text>
+
+            <!-- reset annotation: one arrow, into Layer 0 only -->
+            <g stroke="var(--warn)" stroke-width="1.5" fill="none" color="var(--warn)">
+              <line x1="946" y1="287" x2="768" y2="287" marker-end="url(#ar2)"></line>
+            </g>
+            <text x="946" y="272" font-family="'IBM Plex Mono', monospace" font-size="11.5" fill="var(--warn)" text-anchor="end">index --reset</text>
+            <text x="946" y="304" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="end">reaches Layer 0, and</text>
+            <text x="946" y="319" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="end">stops at its boundary</text>
+          </svg>
+        </div>
+        <figcaption>The split is the load-bearing design decision of v4. Machine-derived facts are
+          cheap and rebuildable; a reviewer's sign-off is not. They therefore live in different
+          databases, and only one of them can be thrown away — a full re-index rebuilds Layer 0 from
+          scratch and leaves every domain assignment, approved requirement and review note in Layer 1
+          untouched.</figcaption>
+      </figure>
+
+      <h3>The pipeline, stage by stage</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Stage</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">Discovery</td>
+              <td>Walks the repository against 28 include patterns and 22 exclusions, hashes every
+                file with SHA-256, and classifies language and third-party status against a vendored
+                GitHub Linguist profile (833 languages, 1,486 extensions, 419 filenames, 55 vendor
+                directory patterns, 113 vendor filename patterns).</td>
+            </tr>
+            <tr>
+              <td class="k">Extraction</td>
+              <td>tree-sitter grammars per language for symbols and references, with a regex
+                fallback path for COBOL. 15 languages are registered. Later milestones added
+                annotations, SQL column facts and type references as first-class facts.</td>
+            </tr>
+            <tr>
+              <td class="k">Chunking</td>
+              <td>Symbol ranges first — a chunk is a function or class, not an arbitrary window. If
+                symbol chunks cover under 30% of a file, fall back to AST-aware chunking, then to
+                line windowing. Seven languages are hard-blocked from the AST chunker after measured
+                hangs (a 13.9 KB JSP ran past 600 seconds).</td>
+            </tr>
+            <tr>
+              <td class="k">Embedding</td>
+              <td>Three interchangeable providers: a deterministic hash embedder for tests, a local
+                Qwen3 model, and hosted Amazon Bedrock Titan v2 at 1,024 dimensions — the production
+                path, because the local model runs at roughly 350 ms per chunk on CPU, an 80-minute
+                job on this corpus.</td>
+            </tr>
+            <tr>
+              <td class="k">Code graph</td>
+              <td>Caller/callee edges resolved by qualified then plain name, each scored:
+                <code>0.85</code> one candidate, <code>0.70</code> same-language ambiguity,
+                <code>0.40</code> cross-file ambiguity, <code>0.30</code> unresolved. Unresolved
+                edges are kept with the callee name rather than dropped. Edge kinds:
+                <code>calls</code>, <code>inherits</code>, <code>implements</code>,
+                <code>references</code>, <code>uses_table</code>.</td>
+            </tr>
+            <tr>
+              <td class="k">Retrieval</td>
+              <td>SQLite FTS5 lexical search and Chroma vector search, fused with reciprocal rank
+                fusion. Plus a <code>coverage</code> command that turns "loop until two rounds find
+                nothing new" into a chunk-level measurement of what has not been examined.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 290" role="img" aria-label="Hybrid retrieval. One query fans out to an FTS5 lexical arm and a Chroma dense-vector arm; an optional domain filter narrows and densely re-ranks the lexical survivors before fusion; reciprocal rank fusion combines both rank lists into one result list carrying file, line and symbol; the code graph then expands callers and callees.">
+            <defs>
+              <marker id="ar3" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+                <polygon points="0,0 10,4 0,8" fill="currentColor"></polygon>
+              </marker>
+            </defs>
+
+            <rect x="20" y="110" width="140" height="58" fill="var(--panel)" stroke="var(--brand)" stroke-width="1.5"></rect>
+            <text x="90" y="134" font-family="'IBM Plex Mono', monospace" font-size="12" fill="var(--ink)" text-anchor="middle">query</text>
+            <text x="90" y="152" font-family="'Hanken Grotesk', sans-serif" font-size="11" fill="var(--ink-3)" text-anchor="middle">"eligibility check"</text>
+
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.3" fill="none" marker-end="url(#ar3)">
+              <path d="M160 130 L200 130 L200 62 L246 62"></path>
+              <path d="M160 148 L200 148 L200 216 L246 216"></path>
+            </g>
+
+            <rect x="248" y="34" width="230" height="58" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+            <text x="264" y="56" font-family="'IBM Plex Mono', monospace" font-size="12" fill="var(--ink)">FTS5 · BM25</text>
+            <text x="264" y="76" font-family="'Hanken Grotesk', sans-serif" font-size="11" fill="var(--ink-2)">exact tokens, identifiers, SQL names</text>
+
+            <rect x="248" y="188" width="230" height="58" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+            <text x="264" y="210" font-family="'IBM Plex Mono', monospace" font-size="12" fill="var(--ink)">Chroma · dense vectors</text>
+            <text x="264" y="230" font-family="'Hanken Grotesk', sans-serif" font-size="11" fill="var(--ink-2)">meaning, without a shared token</text>
+
+            <!-- domain filter -->
+            <rect x="248" y="112" width="230" height="54" fill="var(--panel)" stroke="var(--sky)" stroke-dasharray="4 3"></rect>
+            <text x="264" y="133" font-family="'IBM Plex Mono', monospace" font-size="11.5" fill="var(--sky)">--domain "Claims"</text>
+            <text x="264" y="151" font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-2)">optional: filter, then densely re-rank before fusion</text>
+            <g stroke="var(--sky)" stroke-width="1.1" stroke-dasharray="3 3" fill="none">
+              <line x1="363" y1="112" x2="363" y2="92"></line>
+              <line x1="363" y1="166" x2="363" y2="188"></line>
+            </g>
+
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.3" fill="none" marker-end="url(#ar3)">
+              <path d="M478 62 L520 62 L520 126 L562 126"></path>
+              <path d="M478 216 L520 216 L520 154 L562 154"></path>
+            </g>
+
+            <rect x="564" y="102" width="176" height="76" fill="var(--panel)" stroke="var(--brand)" stroke-width="2"></rect>
+            <text x="652" y="126" font-family="'IBM Plex Mono', monospace" font-size="12.5" fill="var(--brand)" text-anchor="middle">RRF fusion</text>
+            <text x="652" y="148" font-family="'IBM Plex Mono', monospace" font-size="14" fill="var(--ink)" text-anchor="middle">1 / (60 + rank)</text>
+            <text x="652" y="166" font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">rank-based, so no score calibration</text>
+
+            <line x1="740" y1="140" x2="786" y2="140" stroke="currentColor" color="var(--ink-3)" stroke-width="1.3" marker-end="url(#ar3)"></line>
+
+            <rect x="788" y="102" width="192" height="76" fill="var(--panel-2)" stroke="var(--hair)"></rect>
+            <text x="804" y="126" font-family="'IBM Plex Mono', monospace" font-size="12" fill="var(--ink)">ranked chunks</text>
+            <text x="804" y="146" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--ink-2)">file:line:symbol</text>
+            <text x="804" y="166" font-family="'Hanken Grotesk', sans-serif" font-size="10.5" fill="var(--ink-3)">the citation shape agents must emit</text>
+
+            <g stroke="var(--brand)" stroke-width="1.2" fill="none" marker-end="url(#ar3)" color="var(--brand)">
+              <path d="M884 178 L884 246 L652 246"></path>
+            </g>
+            <text x="646" y="242" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--brand)" text-anchor="end">callers / callees — graph expansion</text>
+          </svg>
+        </div>
+        <figcaption>Reciprocal rank fusion combines the two arms on rank rather than score, so a
+          BM25 score and a cosine distance never have to be made comparable. The domain filter
+          re-ranks in-domain lexical survivors densely <em>before</em> fusion — without that step a
+          deep global BM25 rank keeps a weak fusion weight and a correct in-domain hit never
+          surfaces.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============================================================ 05 -->
+    <section id="scope">
+      <div class="sec-head">
+        <span class="num">05 &nbsp;/&nbsp; Scope</span>
+        <h2>What is actually in scope</h2>
+      </div>
+
+      <p class="col">An index silently omits what it does not recognise, and so does every tool that
+        counts lines of code. That is a quiet, expensive failure mode: rule extraction measures its
+        own completeness as a fraction of <em>indexed</em> chunks, so an index that never saw the
+        presentation layer will certify itself complete while having no view of it at all. The
+        <code>layer0-extraction-gap-detection</code> work exists to make the unknown reportable.</p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 200" role="img" aria-label="Bar chart. First-party bytes never indexed on the reference corpus: 19.60 percent before the September 2026 coverage widening, 0.00 percent after.">
+            <text x="0" y="16" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--chart-ink)" letter-spacing="1.2">FIRST-PARTY BYTES NEVER INDEXED — REFERENCE CORPUS</text>
+
+            <!-- scale: 0 to 25% mapped x 150..780 (25.2 px per point); value column at 800 -->
+            <g stroke="var(--hair)" stroke-width="1">
+              <line x1="150" y1="46" x2="150" y2="158"></line>
+            </g>
+            <g stroke="var(--hair)" stroke-width="1" stroke-dasharray="3 4">
+              <line x1="276" y1="46" x2="276" y2="158"></line>
+              <line x1="402" y1="46" x2="402" y2="158"></line>
+              <line x1="528" y1="46" x2="528" y2="158"></line>
+              <line x1="654" y1="46" x2="654" y2="158"></line>
+              <line x1="780" y1="46" x2="780" y2="158"></line>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">
+              <text x="150" y="176">0%</text>
+              <text x="276" y="176">5%</text>
+              <text x="402" y="176">10%</text>
+              <text x="528" y="176">15%</text>
+              <text x="654" y="176">20%</text>
+              <text x="780" y="176">25%</text>
+            </g>
+
+            <!-- before: 19.60% -> 19.6 * 25.2 = 494 -->
+            <rect x="150" y="54" width="494" height="32" rx="4" fill="var(--chart)" opacity="0.42"></rect>
+            <text x="138" y="75" font-family="'IBM Plex Mono', monospace" font-size="12.5" fill="var(--chart-ink)" text-anchor="end">before</text>
+            <text x="864" y="75" font-family="'IBM Plex Mono', monospace" font-size="16" font-weight="600" fill="var(--chart-ink)" text-anchor="end">19.60%</text>
+            <text x="876" y="75" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-3)">276 files</text>
+
+            <!-- after: 0.00% -->
+            <rect x="150" y="110" width="3" height="32" rx="1.5" fill="var(--chart)"></rect>
+            <text x="138" y="131" font-family="'IBM Plex Mono', monospace" font-size="12.5" fill="var(--chart-ink)" text-anchor="end">after</text>
+            <text x="864" y="131" font-family="'IBM Plex Mono', monospace" font-size="16" font-weight="600" fill="var(--chart-ink)" text-anchor="end">0.00%</text>
+            <text x="876" y="131" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-3)">0 files</text>
+          </svg>
+        </div>
+        <figcaption>Measured on the reference corpus: 276 files and 805 KB of first-party source had
+          never been opened, 178 of them JSP — the entire presentation layer. Eight new file
+          patterns, seven language registrations and a shared provenance module closed it, for 4.4%
+          more index wall clock. File discovery went from 1,229 to 1,504 files.</figcaption>
+      </figure>
+
+      <h3>How the walk decides</h3>
+      <ul class="plain col">
+        <li><strong>Linguist for classification, never for filtering.</strong> The vendored profile
+          answers "what language is a <code>.tld</code> file?" and "is this path third-party?" It is
+          used to classify and rank findings. Filtering on it would reproduce the exact failure being
+          fixed.</li>
+        <li><strong>One provenance rule, one place.</strong> A shared module makes file discovery and
+          the gap walk apply the same third-party rules, so the two can no longer disagree about
+          what counts as our code.</li>
+        <li><strong>Symbol-dead is not out of scope.</strong> Of the eight new patterns only XML
+          yields symbols. The other seven contribute retrieval coverage as text chunks reachable by
+          both search arms — which is what the extraction lenses actually consume.</li>
+      </ul>
+
+      <div class="caution">
+        <h5>Open item this created, recorded rather than buried</h5>
+        <p>Admitting <code>**/*.properties</code> pulled in 15 files carrying cleartext
+          credentials, including a production one. Indexing them locally was a deliberate call; the
+          caveat is that hosted embedding sends their contents off the machine regardless. The
+          design questions are written up as a pending draft rather than left implicit.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 06 -->
+    <section id="domains">
+      <div class="sec-head">
+        <span class="num">06 &nbsp;/&nbsp; Domains</span>
+        <h2>Capability domains, and code attached to them</h2>
+      </div>
+
+      <p class="col">Before v4, domain knowledge existed in two weak forms: namespace prefixes
+        inferred bottom-up, or a markdown table an LLM wrote that no tool could query. Eight
+        milestones shipped in July made capability domains a first-class, durable relation — every
+        file assigned to exactly one domain, in a database that survives re-indexing.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Capability</th><th>How it works</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">Capture</td>
+              <td><code>/modernize-assess</code> now emits a machine-readable <code>domains.json</code>
+                — per-domain path globs, inter-domain dependency edges, and exclusions — alongside
+                the human-readable assessment.</td>
+            </tr>
+            <tr>
+              <td class="k">Association</td>
+              <td><code>tag-domains</code> resolves globs to files, writes the assignment, and stamps
+                the domain onto every vector so the semantic arm can filter on it. On the reference
+                corpus: 1,504 files resolved — 1,120 glob-matched, 384 excluded, 0 unassigned —
+                across 12 domains and 36 edges, stamping all 15,398 chunks.</td>
+            </tr>
+            <tr>
+              <td class="k">Human edits win</td>
+              <td>A hand-corrected assignment is marked <code>manual</code> and is never overwritten
+                by automatic re-tagging, including on a full re-index.</td>
+            </tr>
+            <tr>
+              <td class="k">Honest coverage</td>
+              <td>An <code>excluded</code> tier distinguishes "deliberately out of scope" from
+                "nobody has classified this yet" and drops it from the denominator. The reference
+                application went from a reported 69% to an honest 100%.</td>
+            </tr>
+            <tr>
+              <td class="k">Diagram</td>
+              <td><code>render-architecture</code> generates the architecture diagram deterministically
+                from the domain catalog and its edges — byte-identical from either the database or
+                <code>domains.json</code>, and no longer hand-authored by a model.</td>
+            </tr>
+            <tr>
+              <td class="k">Freshness</td>
+              <td><code>validate</code> reports a distinct domains axis that goes loud when new,
+                unclassified files appear, so a stale classification is visible instead of assumed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ 07 -->
+    <section id="reqs">
+      <div class="sec-head">
+        <span class="num">07 &nbsp;/&nbsp; Requirements</span>
+        <h2>Requirements as data, not prose</h2>
+      </div>
+
+      <p class="col">This is the largest single body of work in v4, and the one with the clearest
+        commercial edge. Extraction used to end in a markdown file: run it again and every human
+        correction, sign-off and rejection was gone, and nobody could answer "which rules touch the
+        Orders table?" or "how many rules has anyone actually approved?" without reading thousands
+        of lines by hand.</p>
+
+      <p class="col">v4 replaces the file with a store. Each rule becomes a record with a stable
+        identifier, citations back to the exact lines it was mined from, a review lifecycle, and a
+        notation strict enough to validate. Re-running extraction <em>merges</em> into the store, so
+        human review accumulates instead of evaporating. Markdown becomes a report generated from
+        the store.</p>
+
+      <h3>The notation: one sentence, decomposable</h3>
+      <p class="col">The sentence form composes two standards: the ISO/IEC/IEEE 29148 requirement
+        skeleton supplies the slots, and OMG SBVR supplies the modal keyword, selected by whether the
+        rule is behavioral or definitional. Ten closed patterns cover both classes. Every deviation
+        from the standards is recorded in a numbered register rather than quietly taken.</p>
+
+      <div class="anat">
+        <p class="eyebrow" style="margin-bottom:12px">Pattern <code>B-COND</code> — behavioral, conditional</p>
+        <p class="stmt">
+          <span class="slot">When the purchase order status is Open</span><span class="tag">condition</span>,
+          <span class="slot">the Order Service</span><span class="tag">subject</span>
+          <span class="slot kw">must</span><span class="tag">sbvr modal</span>
+          <span class="slot">recalculate</span><span class="tag">action</span>
+          <span class="slot">the quantity due</span><span class="tag">object</span>
+          <span class="slot">within the same transaction</span><span class="tag">constraint</span>.
+        </p>
+        <div class="meta">
+          <span class="chip">rule_class <b>behavioral</b></span>
+          <span class="chip">pattern <b>B-COND</b></span>
+          <span class="chip">modality <b>requirement</b></span>
+          <span class="chip">enforcement_level <b>strict</b></span>
+          <span class="chip">category <b>Lifecycle</b></span>
+          <span class="chip">state <b>draft</b></span>
+          <span class="chip">citation <b>OrderService.java:412-448</b></span>
+        </div>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>The ten patterns are a closed enum with a database constraint tying each to its
+            rule class. A statement carrying no keyword from its class is an <code>ERROR</code>.</caption>
+          <thead><tr><th>Class</th><th>Pattern</th><th>Template</th></tr></thead>
+          <tbody>
+            <tr><td class="k">behavioral</td><td class="k">B-COND</td><td>[Condition], [Subject] <strong>must</strong> [Action] [Object] [Constraint]</td></tr>
+            <tr><td class="k">behavioral</td><td class="k">B-UNCOND</td><td>[Subject] <strong>must</strong> [Action] [Object] [Constraint]</td></tr>
+            <tr><td class="k">behavioral</td><td class="k">B-PROHIB</td><td>[Condition], [Subject] <strong>must not</strong> [Action] [Object]</td></tr>
+            <tr><td class="k">behavioral</td><td class="k">B-RESTRICT</td><td>[Subject] <strong>may</strong> [Action] [Object] <strong>only if</strong> [Condition]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-NEC</td><td>[Subject] <strong>always</strong> [Action] [Object]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-IMPOSS</td><td>[Subject] <strong>never</strong> [Action] [Object]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-RESTRICT</td><td>[Subject] <strong>can</strong> [Action] [Object] <strong>only if</strong> [Condition]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-COMPUTE</td><td>[Subject] <strong>is to be computed as</strong> [Formula]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-INFER</td><td>[Subject] <strong>is to be considered</strong> [Value] <strong>if</strong> [Condition]</td></tr>
+            <tr><td class="k">definitional</td><td class="k">D-CONST</td><td>[Subject] <strong>is to be fixed at</strong> [Value]</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What the record carries</h3>
+      <p class="col">42 columns on the requirement itself, plus 14 companion tables for citations,
+        scenarios, edge cases, validator findings, computed data flow, merge candidates and run
+        metadata. The fields that matter for how the product behaves:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Field</th><th>Values</th><th>Who fills it</th></tr></thead>
+          <tbody>
+            <tr><td class="k">state</td><td class="k">draft · reviewed · approved · rejected · superseded</td><td>A named human. No automated producer can move a record out of <code>draft</code>.</td></tr>
+            <tr><td class="k">rule_class</td><td class="k">behavioral · definitional</td><td>Extractor, by a deterministic procedure. Never guessed — <code>NULL</code> is an extraction failure and blocks approval.</td></tr>
+            <tr><td class="k">modality</td><td class="k">requirement · expectation</td><td>Extractor proposes, an SME confirms; the proposal and the confirmation are stored separately.</td></tr>
+            <tr><td class="k">enforcement_level</td><td class="k">strict · deferred · pre-authorized · post-justified · override · guideline</td><td>SME only — the manual half of enforcement is not in the repository, so it is not derivable from code.</td></tr>
+            <tr><td class="k">structured_body</td><td class="k">decision_table · state_transition · formula · invariant</td><td>Extractor, schema-validated. A decision table is data, not a paragraph describing one.</td></tr>
+            <tr><td class="k">as_built vs statement</td><td>—</td><td>What the code does is recorded separately from what the business requires, so a suspected defect can be flagged instead of laundered into a requirement.</td></tr>
+            <tr><td class="k">rationale · fit_criterion</td><td>—</td><td>SME only, extractor forbidden. An empty field is review progress, not a defect.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Identity, and why re-running is safe</h3>
+      <p class="col">The guarantee that makes the store usable is that running extraction twice
+        produces the same count the second time, not double. Each rule gets a dedupe key derived from
+        its citation anchors, class, pattern and body; a second run merges onto existing records and
+        queues anything ambiguous for a reviewer rather than deciding silently.</p>
+
+      <div class="tw">
+        <table>
+          <caption>Measured on the reference corpus, 2026-09-10. The second and third ingests of the
+            same file each reported <code>0 new · 437 merged · 0 candidate</code> and zero rows
+            inserted, with every substantive column stable.</caption>
+          <thead><tr><th>Measurement</th><th class="n">Result</th><th>Reading</th></tr></thead>
+          <tbody>
+            <tr><td>Rules mined, four rounds</td><td class="n">437</td><td>Stored as 379 records</td></tr>
+            <tr><td>Offers collapsed onto a shared record</td><td class="n">106 → 48</td><td>13.3% of mined rules; all 48 groups read back against the corpus and confirmed genuinely the same rule</td></tr>
+            <tr><td>Under-merged clusters</td><td class="n">34</td><td>Every internal pair queued as a merge candidate — 34 of 34, none missed. Visible, not lost.</td></tr>
+            <tr><td>Decision tables extracted</td><td class="n">39</td><td>3–8 rules each, median 5</td></tr>
+            <tr><td>Index coverage after four rounds</td><td class="n">3.07%</td><td>473 of 15,398 chunks — the honest denominator</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 200" role="img" aria-label="Bar chart. New rules found per extraction round: round 1, 112; round 2, 115; round 3, 92; round 4, 118. Round four produced more than any other round, so the corpus had not saturated.">
+            <text x="0" y="16" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--chart-ink)" letter-spacing="1.2">NEW RULES FOUND PER EXTRACTION ROUND</text>
+
+            <!-- scale 0..125 mapped y 160..40 ; bars at x -->
+            <line x1="120" y1="160" x2="960" y2="160" stroke="var(--hair)" stroke-width="1"></line>
+            <g stroke="var(--hair)" stroke-width="1" stroke-dasharray="3 4">
+              <line x1="120" y1="40" x2="960" y2="40"></line>
+              <line x1="120" y1="100" x2="960" y2="100"></line>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)" text-anchor="end">
+              <text x="110" y="44">125</text>
+              <text x="110" y="104">62</text>
+              <text x="110" y="164">0</text>
+            </g>
+
+            <!-- 112 -> h=107.5 y=52.5 ; 115 -> h=110.4 y=49.6 ; 92 -> h=88.3 y=71.7 ; 118 -> h=113.3 y=46.7 -->
+            <g fill="var(--chart)">
+              <rect x="170" y="53"  width="120" height="107" rx="4"></rect>
+              <rect x="360" y="50"  width="120" height="110" rx="4"></rect>
+              <rect x="550" y="72"  width="120" height="88"  rx="4"></rect>
+              <rect x="740" y="47"  width="120" height="113" rx="4"></rect>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="15" font-weight="600" fill="var(--chart-ink)" text-anchor="middle">
+              <text x="230" y="44">112</text>
+              <text x="420" y="41">115</text>
+              <text x="610" y="63">92</text>
+              <text x="800" y="38">118</text>
+            </g>
+            <g font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--ink-3)" text-anchor="middle">
+              <text x="230" y="180">round 1</text>
+              <text x="420" y="180">round 2</text>
+              <text x="610" y="180">round 3</text>
+              <text x="800" y="180">round 4</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Round 4 produced more new rules than any other round. The extraction loop stops
+          on a round cap, not on saturation — so the corpus size is a budget decision, and nobody
+          should read 437 rules as "all the rules in this estate."</figcaption>
+      </figure>
+
+      <div class="note">
+        <h5>The commands a reviewer actually uses</h5>
+        <p>Fourteen subcommands under <code>legacylift-search requirements</code>. The four that
+          define the product: <code>list --state approved</code> answers the question nobody could
+          answer before; <code>set-state</code> records a human judgement and refuses to reach
+          <code>approved</code> while any <code>ERROR</code> finding stands; <code>validate</code>
+          reports notation violations without changing anything; <code>export --format jsonl</code>
+          writes a git-committable file so a team can review requirement changes in a pull
+          request.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 08 -->
+    <section id="surface">
+      <div class="sec-head">
+        <span class="num">08 &nbsp;/&nbsp; Surface</span>
+        <h2>The review surface, read-only by design</h2>
+      </div>
+
+      <p class="col">A requirements store is only worth building if someone other than its author
+        can read it. <code>platform-ui</code>, new in v4.0.0, is a web view over everything v4
+        produces for a system: requirements with server-side paging, full-text search and facets;
+        every citation resolved to the lines the rule was mined from; merge candidates awaiting a
+        decision; topology, capability domains, diagrams and the generated documents. It is
+        <strong>read-only</strong>, and that is a decision rather than a shortfall — the store owns
+        the approval gate and every write path, so this milestone proves the corpus is legible
+        before anything is allowed to change it. Where a write would go, it shows what the store
+        holds and says so.</p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 1000 210" role="img" aria-label="Three-stage flow. The analysis tree for a system is read once by prepare_data.py, which writes a prepared copy under platform-ui/data containing a byte copy of knowledge.sqlite and only the cited line ranges. The .NET API reads that copy over read-only connections and serves the Angular web app. The UI never opens the analysis tree.">
+            <defs>
+              <marker id="ar8" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+                <polygon points="0,0 10,4 0,8" fill="currentColor"></polygon>
+              </marker>
+            </defs>
+
+            <!-- source -->
+            <rect x="20" y="56" width="290" height="112" fill="var(--panel-2)" stroke="var(--deep)" stroke-width="1.5"></rect>
+            <text x="40" y="82" font-family="'IBM Plex Mono', monospace" font-size="10" fill="var(--ink-3)" letter-spacing="1.2">SOURCE — NEVER OPENED BY THE UI</text>
+            <text x="40" y="106" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="600" fill="var(--ink)">analysis/&lt;system&gt;/</text>
+            <text x="40" y="128" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">knowledge.sqlite · domains.json</text>
+            <text x="40" y="146" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">*.md · *.mmd · the cited client source</text>
+
+            <!-- prepared copy -->
+            <rect x="375" y="56" width="270" height="112" fill="var(--panel)" stroke="var(--brand)" stroke-width="2"></rect>
+            <text x="395" y="82" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--brand)" letter-spacing="1.4">PREPARED COPY — GITIGNORED</text>
+            <text x="395" y="106" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="600" fill="var(--ink)">platform-ui/data/</text>
+            <text x="395" y="128" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">byte copy of the store · snippets.json</text>
+            <text x="395" y="146" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">cited ranges only, 8 lines of context</text>
+
+            <!-- api + web -->
+            <rect x="730" y="56" width="250" height="112" fill="var(--panel-2)" stroke="var(--sky)" stroke-width="1.5"></rect>
+            <text x="750" y="82" font-family="'IBM Plex Mono', monospace" font-size="11" fill="var(--ink-3)" letter-spacing="1.4">READ-ONLY</text>
+            <text x="750" y="106" font-family="'Hanken Grotesk', sans-serif" font-size="15" font-weight="600" fill="var(--ink)">API &rarr; web</text>
+            <text x="750" y="128" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">.NET 10 · 13 GET endpoints</text>
+            <text x="750" y="146" font-family="'Hanken Grotesk', sans-serif" font-size="12" fill="var(--ink-2)">Angular 21 · no write path at all</text>
+
+            <!-- arrows -->
+            <g stroke="currentColor" color="var(--ink-3)" stroke-width="1.3" marker-end="url(#ar8)">
+              <line x1="310" y1="112" x2="368" y2="112"></line>
+              <line x1="645" y1="112" x2="723" y2="112"></line>
+            </g>
+            <text x="342" y="40" font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">prepare_data.py</text>
+            <text x="342" y="192" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">run again after</text>
+            <text x="342" y="206" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">anything changes</text>
+            <text x="684" y="40" font-family="'IBM Plex Mono', monospace" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">read-only</text>
+            <text x="684" y="192" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">two processes,</text>
+            <text x="684" y="206" font-family="'Hanken Grotesk', sans-serif" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">no containers</text>
+          </svg>
+        </div>
+        <figcaption>The load-bearing decision here is that the dataset is a copy, not the live tree.
+          The UI cannot reach Layer 1, so "read-only" is a property of the deployment and not just
+          of the code; and whole client files never leave the analysis tree — only the cited ranges
+          travel, so the code viewer cannot browse the source even by accident. The cost is that the
+          view is a snapshot: re-run the script or the UI shows the previous run.</figcaption>
+      </figure>
+
+      <h3>What it is built from</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Part</th><th>Choice</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">API</td>
+              <td>.NET 10 minimal API on port 5189, <code>Microsoft.Data.Sqlite</code> over
+                read-only connections. Thirteen endpoints, all <code>GET</code>, all scoped to one
+                system — requirements (paged, FTS5 search, facets, sort), one requirement, merge
+                candidates, a citation's snippet, docs, diagrams, topology, domains, stats.</td>
+            </tr>
+            <tr>
+              <td class="k">Web</td>
+              <td>Angular 21 LTS with Angular Material, mermaid 11, highlight.js and marked, on port
+                4200. Routing mirrors the hierarchy — a project owns systems, and every artifact
+                page is scoped to one system.</td>
+            </tr>
+            <tr>
+              <td class="k">Data</td>
+              <td>A prepared copy under <code>platform-ui/data/</code>, gitignored in full because
+                it holds client-derived requirements and cited code slices.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="caution">
+        <h5>What this milestone did not include</h5>
+        <p>There are <strong>no tests</strong> for either half yet — Milestone 1 had no test scope,
+          and the Angular scaffold's vitest setup is what forces
+          <code>npm install --legacy-peer-deps</code> on this machine. CI builds both halves on
+          every pull request, which catches a break but proves nothing about behaviour. It is now a
+          tracked deliverable with a measured starting point rather than a footnote.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 09 -->
+    <section id="research">
+      <div class="sec-head">
+        <span class="num">09 &nbsp;/&nbsp; Evidence</span>
+        <h2>The research basis</h2>
+      </div>
+
+      <p class="col">The notation was not invented. Twenty survey threads went through the
+        requirements-engineering and business-rule-extraction literature; thirteen primary sources
+        were acquired and read directly rather than summarised second-hand. The survey's most
+        useful negative finding: the field's published extraction work mostly emits "code snippets or
+        graph slices," not normative requirement sentences — which is precisely the gap v4
+        occupies.</p>
+
+      <div class="tw">
+        <table>
+          <caption>Licensing is tracked per source. The OMG specifications are freely
+            redistributable and safe to quote; the ISO copy on hand is a third party's institutional
+            download, so a CapTech-licensed copy is an open action before any client deliverable
+            quotes it.</caption>
+          <thead><tr><th>Source</th><th>What it contributed</th></tr></thead>
+          <tbody>
+            <tr><td class="k">ISO/IEC/IEEE 29148:2018</td><td>The requirement sentence skeleton — the slot structure the notation uses. Clauses 5.2.4–5.2.8 verified against the standard itself.</td></tr>
+            <tr><td class="k">OMG SBVR v1.0</td><td>The definitional/behavioral split, the modal keyword sets, and the six enforcement levels. Read from the specification, including the caveat that the enforcement list is an informative example set derived from BMM — cited as such, never as a normative enum.</td></tr>
+            <tr><td class="k">Von Halle, <em>Business Rules Applied</em> (2001)</td><td>The seven-classification taxonomy and the expression-form templates.</td></tr>
+            <tr><td class="k">Femmer et al., Requirements Smells</td><td>The validator's empirical basis — which lint rules find real defects, and at what rate.</td></tr>
+            <tr><td class="k">van de Hoef et al. + the DeCoMi prototype</td><td>The only published code-to-DMN pipeline; read in full, prototype inspected. Informed the typed decision-table body.</td></tr>
+            <tr><td class="k">Normantas &amp; Vasilecas, 2013 SLR</td><td>Systematic review of 24 primary studies on business-rule extraction — the source of the "code snippets or graph slices" finding.</td></tr>
+            <tr><td class="k">Baxter &amp; Hendryx, 2005</td><td>A standards-based extraction approach; read in full, and it corrected an assumption — the approach is SBVR-based, not KDM-based.</td></tr>
+            <tr><td class="k">ISO/IEC 19506 / OMG KDM 1.4</td><td>The most directly relevant standard to the whole plan, and the one nobody cites. Attribution caveats recorded.</td></tr>
+            <tr><td class="k">10 arXiv preprints</td><td>Current LLM-era work: BREX (409 documents, 2,855 expert-annotated rules), IBM knowledge-graph and alignment work, AgentModernize, Reversa, COBOL benchmarks, iStar 2.0.</td></tr>
+            <tr><td class="k">EARS · Volere · Planguage · SOPHIST MASTeR · Withall · SCR/Parnas · ReqIF · DMN</td><td>Surveyed and deliberately <em>not</em> adopted, each for a recorded reason. Withall's 37 patterns across 8 domains and Parnas's SCR tables both turned out to be precedent for something adjacent, not for tabular business requirements.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h5>The honest number on evaluation</h5>
+        <p>The survey looked hard for an oracle and did not find one: there is no accepted ground
+          truth for "the business rules in this codebase," so no extraction tool can report recall.
+          That is why v4 reports coverage against the index instead, and why the review lifecycle
+          exists — the measurable claim is "a named human approved this rule against these cited
+          lines," which is a stronger thing to hand a client than a confidence score.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 10 -->
+    <section id="flight">
+      <div class="sec-head">
+        <span class="num">10 &nbsp;/&nbsp; Status</span>
+        <h2>In flight, and known gaps</h2>
+      </div>
+
+      <p class="col">Work in progress is tracked as self-contained execution plans — a new engineer
+        can read one top to bottom and continue without other context. Four are active. The gaps
+        below are measured and written down, which is the point: none of them is a surprise waiting
+        in a client engagement.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>Track</th><th>State</th><th>Next</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">Requirements store</td>
+              <td>Milestone 1 complete 2026-09-10 — schema, ingest, validator, 14 commands, all acceptance checks discharged against a real run</td>
+              <td>Milestone 1.5: baseline comparison against the pre-v4 extractor, with a measured noise floor</td>
+            </tr>
+            <tr>
+              <td class="k">Layer 0 index</td>
+              <td>Shipped through Milestone 25 — chunking, embeddings, graph, type hierarchy, annotation and SQL facts</td>
+              <td>M26 <code>uses_table</code> lineage correctness, which gates the requirement records' data-flow block; M27 unresolved-dispatch visibility</td>
+            </tr>
+            <tr>
+              <td class="k">Scope &amp; gap detection</td>
+              <td>M0 and M1 shipped; the coverage widening shipped out of order because it was worth more than its place in the queue</td>
+              <td>M2: a <code>gaps</code> command that reports what Layer 0 never opened</td>
+            </tr>
+            <tr>
+              <td class="k">Requirements review UI</td>
+              <td>Milestone 1 shipped 2026-09-11 — <code>platform-ui</code>, read-only over a prepared copy of the store (§08)</td>
+              <td>Milestone 4 of the requirements plan — the write path an SME uses instead of the CLI; and a test suite for the UI, which shipped with none</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Measured gaps, on the record</h3>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Gap</th><th>Measurement</th><th>Consequence</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="k">Dense-vector coverage</td>
+              <td>Roughly 70% of chunks never receive a dense vector, on both reference corpora</td>
+              <td>A cost filter that has never been evaluated for recall. Written up as a call for a recall/precision evaluation, not a flag flip.</td>
+            </tr>
+            <tr>
+              <td class="k">DTO catalog completeness</td>
+              <td>187 of 437 rules were never shown to the data-object agent</td>
+              <td>One consumer field is 56.5% complete while looking finished. Off the current milestone path, but it must not ship as-is.</td>
+            </tr>
+            <tr>
+              <td class="k">Dedupe key tiering</td>
+              <td>34 clusters / 54 excess rows on the reference corpus</td>
+              <td>Not a correctness defect — all 34 are queued for a reviewer — but the store is now populated, so changing the key is a migration rather than a free fix.</td>
+            </tr>
+            <tr>
+              <td class="k">Run-to-run variance</td>
+              <td>Two four-round runs over identical code at identical settings: 379 records / 117 files cited, versus 656 / 140</td>
+              <td>Now a measured quantity rather than an unknown. It is large, and any coverage claim has to be read beside it.</td>
+            </tr>
+            <tr>
+              <td class="k">Durable LOC counts</td>
+              <td>Lines of code are computed at least three times per engagement and stored zero times</td>
+              <td>A one-column change, free to populate because discovery already reads every file whole. Queued behind the shared migration mechanism.</td>
+            </tr>
+            <tr>
+              <td class="k">Review-surface tests</td>
+              <td>Zero tests across <code>platform-ui</code>'s 15,517 lines; CI builds both halves but exercises neither</td>
+              <td>A break is caught, behaviour is not. Now a tracked deliverable with a measured starting point, not a note in a README.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h5>What to take away</h5>
+        <p>v4 moved LegacyLift from "an LLM reads your code and writes documents" to "a deterministic
+          index and a reviewed requirements store, with an LLM doing the judgement work in between."
+          The difference a client can see: citations that resolve, coverage stated as a number with
+          its denominator, a re-run that preserves their reviewers' work, and a recommendation
+          between uplift, transform and reimagine that is backed by a delta catalog rather than a
+          preference.</p>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>LegacyLift v4</strong> — briefing prepared 2026-09-11, revised 2026-09-15 for the
+        <code>v4.0.0</code> release on <code>main</code> (285 commits ahead of <code>v3.7.0</code>).
+        The release notes are at <code>docs/release-notes/v4.0.0-release-notes.md</code>.</p>
+      <p>All repository figures re-measured at the release point. Reference-corpus numbers come
+        from a client Java/JSP estate and are reproducible from the execution plans under
+        <code>docs/exec-plans/</code>. The <code>code-modernization</code> plugin is Apache-2.0,
+        © Anthropic, with CapTech modifications recorded per file.</p>
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>

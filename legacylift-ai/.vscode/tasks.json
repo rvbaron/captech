@@ -1,0 +1,92 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "platform-ui: build API",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/platform-ui/api/LegacyLift.PlatformApi.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
+      "label": "platform-ui: serve Web",
+      "detail": "ng serve on :4200, proxying /api to the API on :5189",
+      "type": "shell",
+      "command": "npm",
+      "args": ["start"],
+      "options": { "cwd": "${workspaceFolder}/platform-ui/web" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": ["relative", "${workspaceFolder}/platform-ui/web"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+)\\s+-\\s+(error|warning)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "(Building\\.\\.\\.|Changes detected)",
+          "endsPattern": "(Watch mode enabled|Local:\\s+http)"
+        }
+      }
+    },
+    {
+      "label": "platform-ui: stop Web",
+      "detail": "Kills the ng serve started by the serve task",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -like '*ng*serve*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+      ],
+      "presentation": { "reveal": "silent", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "platform-ui: run API",
+      "detail": "dotnet run — use when you want the API without the debugger attached",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run"],
+      "options": { "cwd": "${workspaceFolder}/platform-ui/api" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "csharp",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Building\\.\\.\\.",
+          "endsPattern": "Now listening on|Application started"
+        }
+      }
+    },
+    {
+      "label": "platform-ui: start both",
+      "detail": "API + web dev server, no debugger. Ctrl+Shift+B.",
+      "dependsOn": ["platform-ui: run API", "platform-ui: serve Web"],
+      "dependsOrder": "parallel",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "platform-ui: prepare data",
+      "detail": "Rebuild the demo dataset under platform-ui/data from the analysis tree",
+      "type": "shell",
+      "command": "python",
+      "args": ["${workspaceFolder}/platform-ui/tools/prepare_data.py"],
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "platform-ui: API (.NET)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "platform-ui: build API",
+      "program": "${workspaceFolder}/platform-ui/api/bin/Debug/net10.0/LegacyLift.PlatformApi.dll",
+      "cwd": "${workspaceFolder}/platform-ui/api",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5189"
+      }
+    },
+    {
+      "name": "platform-ui: Web (Angular)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "platform-ui: serve Web",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/platform-ui/web/src",
+      "postDebugTask": "platform-ui: stop Web"
+    },
+    {
+      "name": "platform-ui: Web (Angular, Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "preLaunchTask": "platform-ui: serve Web",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/platform-ui/web/src",
+      "postDebugTask": "platform-ui: stop Web"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "platform-ui (API + Web)",
+      "configurations": ["platform-ui: API (.NET)", "platform-ui: Web (Angular)"],
+      "stopAll": true,
+      "presentation": { "group": "platform-ui", "order": 1 }
+    },
+    {
+      "name": "platform-ui (API + Web, Edge)",
+      "configurations": [
+        "platform-ui: API (.NET)",
+        "platform-ui: Web (Angular, Edge)"
+      ],
+      "stopAll": true,
+      "presentation": { "group": "platform-ui", "order": 2 }
+    }
+  ]
+}

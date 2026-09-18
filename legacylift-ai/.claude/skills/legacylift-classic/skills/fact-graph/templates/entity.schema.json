@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://legacylift.ai/schemas/entity.json",
+  "title": "Entity",
+  "description": "Represents a code entity (class, function, table, service, etc.) in the codebase",
+  "type": "object",
+  "required": ["id", "type", "name", "file", "line_range"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique, deterministic identifier with domain prefix (e.g., cs:orders-orderservice-abc123)",
+      "pattern": "^(cs|db|ep|auth|svc|dto|proc|view|trig|ent):[a-z0-9-]+$"
+    },
+    "type": {
+      "type": "string",
+      "description": "The kind of entity",
+      "enum": [
+        "class",
+        "interface",
+        "function",
+        "method",
+        "table",
+        "view",
+        "stored_proc",
+        "sql_function",
+        "trigger",
+        "index",
+        "constraint",
+        "service",
+        "endpoint",
+        "controller",
+        "repository",
+        "model",
+        "dto",
+        "enum",
+        "config",
+        "middleware",
+        "component",
+        "module",
+        "package"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "The simple name of the entity (e.g., 'UserService', 'Users')",
+      "minLength": 1
+    },
+    "qualified_name": {
+      "type": "string",
+      "description": "The fully qualified name (e.g., 'MyApp.Services.UserService', 'dbo.Users')"
+    },
+    "file": {
+      "type": "string",
+      "description": "Relative path from repository root to the file containing this entity",
+      "minLength": 1
+    },
+    "line_range": {
+      "type": "array",
+      "description": "Line range [start, end] where entity is defined (1-indexed, inclusive)",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Additional type-specific attributes",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Programming language",
+          "enum": ["csharp", "java", "python", "typescript", "javascript", "sql", "scala", "go", "rust", "kotlin"]
+        },
+        "visibility": {
+          "type": "string",
+          "description": "Access modifier",
+          "enum": ["public", "private", "protected", "internal", "package"]
+        },
+        "is_abstract": {
+          "type": "boolean",
+          "description": "Whether the entity is abstract (classes, methods)"
+        },
+        "is_static": {
+          "type": "boolean",
+          "description": "Whether the entity is static"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace or package name"
+        },
+        "schema": {
+          "type": "string",
+          "description": "Database schema name (for SQL entities)"
+        },
+        "columns": {
+          "type": "array",
+          "description": "Column names (for tables)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary_key": {
+          "type": ["string", "array"],
+          "description": "Primary key column(s)"
+        },
+        "foreign_keys": {
+          "type": "array",
+          "description": "Foreign key definitions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "references_table": {
+                "type": "string"
+              },
+              "references_column": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "description": "Method/function/procedure parameters",
+          "items": {
+            "type": "string"
+          }
+        },
+        "return_type": {
+          "type": "string",
+          "description": "Return type of function/method"
+        },
+        "annotations": {
+          "type": "array",
+          "description": "Decorators, attributes, annotations",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implements": {
+          "type": "array",
+          "description": "Interfaces or base classes implemented/extended",
+          "items": {
+            "type": "string"
+          }
+        },
+        "route": {
+          "type": "string",
+          "description": "API endpoint route (for endpoints)"
+        },
+        "http_method": {
+          "type": "string",
+          "description": "HTTP method (for endpoints)",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+        },
+        "domain": {
+          "type": "string",
+          "description": "Business domain classification - the business capability this entity supports (e.g., Points, LegalEntity, Orders, Billing, Core)"
+        },
+        "technical_layer": {
+          "type": "string",
+          "description": "Technical architecture layer - how the entity is organized (e.g., Model, Service, Persistence, Web, Util, Validation, Exception, Configuration)",
+          "enum": ["Model", "Service", "Persistence", "Web", "Util", "Validation", "Exception", "Configuration", "Other", "Unknown"]
+        },
+        "capability": {
+          "type": "string",
+          "description": "Functional capability classification - specific capability within domain (e.g., OrderProcessing, UserAuthentication, PaymentHandling)"
+        },
+        "content_hash": {
+          "type": "string",
+          "description": "SHA-256 hash (first 12 chars) of entity code block for drift detection",
+          "pattern": "^[a-f0-9]{12}$"
+        }
+      }
+    }
+  }
+}

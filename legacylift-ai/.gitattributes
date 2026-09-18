@@ -1,0 +1,18 @@
+# The vendored linguist profile is a derived file whose whole value as a
+# reviewable artifact is that regenerating it at the same upstream commit
+# produces byte-identical output. `scripts/refresh_linguist.py` writes it with
+# LF; this repository is checked out under `core.autocrlf=true` and carries no
+# other .gitattributes, so without this line git hands the file back with CRLF
+# on the next checkout and every future refresh diff is the entire file.
+#
+# Scoped deliberately to this one path. A repo-wide `*.json text eol=lf` would
+# renormalize the existing profiles/extractors.json, which is checked out with
+# CRLF today and is nobody's business here.
+tools/legacylift_search/src/legacylift_search/profiles/linguist.json text eol=lf
+
+# The vendored web fonts under docs/legacylift-v4-overview/ are binary. Git's
+# content heuristic happens to classify them correctly today, but under this
+# repository's `core.autocrlf=true` an unspecified attribute leaves that to a
+# guess -- and a woff2 that gets CRLF-normalized on checkout is a silently
+# broken font on someone else's clone. Pin it rather than rely on the guess.
+docs/legacylift-v4-overview/assets/fonts/*.woff2 binary
